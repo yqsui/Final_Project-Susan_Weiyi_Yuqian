@@ -15,6 +15,7 @@ conda activate fire_analysis
 ```
 data/
   raw-data/                             # Raw data files
+    building_violations_raw             # Building violation record
     median_household_income_B19013.csv  # Median household income in the past 12 months
     poverty_status_B17001.csv           # Poverty status (for calculating poverty rate)
     rent_burden_B25070.csv              # Gross rent as a percentage of household income in the past 12 months
@@ -30,14 +31,24 @@ code/
 
 ## Usage
 
-1. Run preprocessing to filter data:
+1. Run below code in terminal to create and activate environment:
    ```bash
-   python code/preprocessing.py
+   conda env create -f environment.yml
+
+   conda activate housing_risk_analysis # for Windows
+   source activate housing_economic_analysis # for MacOS / Linux
+
+   conda env update -f environment.yml --prune # for updating
    ```
 
-2. Generate the xxx plot:
+2. Run preprocessing to filter data:
    ```bash
-   python code/xxx.py
+   code/preprocessing.py
+   ```
+
+3. Generate the xxx plot:
+   ```bash
+   code/xxx.py
    ```
 
 ## Large Raw Dataset
