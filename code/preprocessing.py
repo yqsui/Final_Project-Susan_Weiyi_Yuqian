@@ -436,7 +436,7 @@ print("Rows:",viol_gdf.shape[0])
 viol_gdf[['ID','LATITUDE','LONGITUDE','geometry']].head()
 
 
-# read tracts
+# Read tracts
 tract_path=raw_dir/'tl_2024_17_tract.shp'
 tracts=gpd.read_file(tract_path)
 print("Tracts CRS:",tracts.crs)
@@ -444,7 +444,7 @@ print("Tracts columns:",list(tracts.columns))
 tracts=tracts[['GEOID','geometry']].copy()
 
 
-# spatial join
+# Spatial join
 print("viol_gdf CRS:",viol_gdf.crs)
 print("tracts CRS:",tracts.crs)
 
@@ -460,14 +460,14 @@ viol_with_tract=gpd.sjoin(
 )
 
 
-# check whether sjoin created one-to-many matches
+# Check whether sjoin created one-to-many matches
 print("violations before:",viol_gdf.shape[0])
 print("rows after join:",viol_with_tract.shape[0])
 print("unmatched points:",viol_with_tract["GEOID"].isna().sum())
 print("unique GEOID matched:",viol_with_tract["GEOID"].nunique())
 
 
-# keep a minimal detail table with code and description 
+# Keep a minimal detail table with code and description 
 detail_cols=[
     "ID",
     "GEOID",
@@ -483,7 +483,7 @@ viol_detail["YEAR_MONTH_STR"]=viol_detail["YEAR_MONTH"].astype(str)
 viol_detail["YEAR_MONTH_DT"]=viol_detail["YEAR_MONTH"].dt.to_timestamp()
 
 
-# create tract*month aggregation (for Streamlit dynamic map)
+# Create tract*month aggregation (for Streamlit dynamic map)
 tract_month=(viol_with_tract
              .dropna(subset=["GEOID"])
              .groupby(["GEOID","YEAR_MONTH"],as_index=False)
@@ -495,7 +495,7 @@ tract_month['YEAR_MONTH_DT']=tract_month['YEAR_MONTH'].dt.to_timestamp()
 tract_month.head()
 
 
-# aggregate building violations to tract×month×violation_code counts 
+# Aggregate building violations to tract×month×violation_code counts 
 tract_month_code=(viol_with_tract
                   .dropna(subset=["GEOID"])
                   .groupby(["GEOID","YEAR_MONTH","VIOLATION CODE"],as_index=False)
@@ -506,7 +506,7 @@ tract_month_code["YEAR_MONTH_STR"]=tract_month_code["YEAR_MONTH"].astype(str)
 tract_month_code["YEAR_MONTH_DT"]=tract_month_code["YEAR_MONTH"].dt.to_timestamp()
 
 
-# build a code -> description mapping
+# Build a code -> description mapping
 code_desc=(viol_with_tract
            .dropna(subset=["VIOLATION CODE","VIOLATION DESCRIPTION"])
            .groupby("VIOLATION CODE")["VIOLATION DESCRIPTION"]
@@ -515,8 +515,7 @@ code_desc=(viol_with_tract
            .rename(columns={"VIOLATION DESCRIPTION":"VIOLATION_DESCRIPTION"}))
 
 
-# merge description into the aggregated table
+# Merge description into the aggregated table
 tract_month_code=tract_month_code.merge(code_desc,on="VIOLATION CODE",how="left")
 out_path_code=out_dir/"building_violation_by_code.csv"
 tract_month_code.to_csv(out_path_code,index=False)
-
