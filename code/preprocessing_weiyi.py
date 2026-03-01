@@ -82,7 +82,7 @@ viol_detail["YEAR_MONTH_STR"]=viol_detail["YEAR_MONTH"].astype(str)
 viol_detail["YEAR_MONTH_DT"]=viol_detail["YEAR_MONTH"].dt.to_timestamp()
 
 
-# create tract×month aggregation (for Streamlit dynamic map)
+# create tract*month aggregation (for Streamlit dynamic map)
 tract_month=(viol_with_tract
              .dropna(subset=["GEOID"])
              .groupby(["GEOID","YEAR_MONTH"],as_index=False)
@@ -116,33 +116,6 @@ code_desc=(viol_with_tract
 
 # merge description into the aggregated table
 tract_month_code=tract_month_code.merge(code_desc,on="VIOLATION CODE",how="left")
-
 out_path_code=out_dir/"building_violation_by_code.csv"
 tract_month_code.to_csv(out_path_code,index=False)
-out_path_detail=out_dir/"building_violations_detail.csv"
-viol_detail.to_csv(out_path_detail,index=False)
 
-
-# Complete the panel of tract*month (give 0)
-all_geoids=tract_month['GEOID'].unique()
-all_months=pd.period_range('2020-01','2024-12',freq='M')
-
-full_index=pd.MultiIndex.from_product(
-    [all_geoids,all_months],
-    names=['GEOID','YEAR_MONTH']
-)
-
-tract_month_full=(tract_month
-                  .set_index(['GEOID','YEAR_MONTH'])
-                  .reindex(full_index,fill_value=0)
-                  .reset_index())
-
-tract_month_full['YEAR_MONTH_STR']=tract_month_full['YEAR_MONTH'].astype(str)
-tract_month_full['YEAR_MONTH_DT']=tract_month_full['YEAR_MONTH'].dt.to_timestamp()
-
-tract_month_full.head()
-
-
-# save derived data
-out_path=out_dir/'building_violation.csv'
-tract_month_full.to_csv(out_path,index=False)
