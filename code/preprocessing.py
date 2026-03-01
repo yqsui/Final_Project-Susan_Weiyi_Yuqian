@@ -158,7 +158,7 @@ economic_df_clean = economic_df.dropna(
 print("Before drop:", len(economic_df_clean))
 print("After drop:", len(economic_df_clean))
 
-# Final economic pressue index
+# Final economic pressure index
 economic_df_clean["economic_pressure_index"] = (
     economic_df_clean["rb_30plus_z"]
     + economic_df_clean["income_z_rev"]
@@ -519,3 +519,4 @@ code_desc=(viol_with_tract
 tract_month_code=tract_month_code.merge(code_desc,on="VIOLATION CODE",how="left")
 out_path_code=out_dir/"building_violation_by_code.csv"
 tract_month_code.to_csv(out_path_code,index=False)
+
