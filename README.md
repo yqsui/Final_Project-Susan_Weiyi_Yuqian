@@ -35,8 +35,8 @@ code/
    ```bash
    conda env create -f environment.yml
 
-   conda activate housing_risk_analysis # for Windows
-   source activate housing_economic_analysis # for MacOS / Linux
+   conda activate housing_risk_analysis        # for Windows
+   source activate housing_economic_analysis   # for MacOS / Linux
 
    conda env update -f environment.yml --prune # for updating
    ```
