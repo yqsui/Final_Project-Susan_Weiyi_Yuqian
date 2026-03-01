@@ -326,8 +326,9 @@ units_in_structure = units_in_structure[
 units_in_structure["old_building_rate"] = round(
     (units_in_structure["built_1939_earlier"] / units_in_structure["total_buildings"]) * 100, 2
 )
+units_in_structure
 units_in_structure["old_building_rate_z"] = zscore(units_in_structure["old_building_rate"])
-building_df = units_in_structure[["GEOID", "old_building_rate", "old_building_rate_z"]].copy()
+building_df = units_in_structure[["GEOID", "total_buildings", "old_building_rate", "old_building_rate_z"]].copy()
 
 
 ### Merge into a "Housing Structural Features" DataFrame
@@ -339,7 +340,7 @@ housing_df = poverty_df.merge(
 )
 
 housing_df = housing_df.merge(
-    building_df[["GEOID", "old_building_rate", "old_building_rate_z"]],
+    building_df[["GEOID", "total_buildings", "old_building_rate", "old_building_rate_z"]],
     on="GEOID",
     how="left",
     indicator="merge_building"
@@ -367,7 +368,7 @@ print(nan_key[["GEOID", "poverty_rate_z", "renter_rate_z", "old_building_rate_z"
 
 # Clean housing_df
 housing_df_clean = housing_df.dropna(
-    subset=["poverty_rate_z", "renter_rate_z", "old_building_rate_z"]
+    subset=["total_buildings", "poverty_rate_z", "renter_rate_z", "old_building_rate_z"]
 )
 
 print(f"\nBefore drop NaN: {len(housing_df)}")
@@ -386,6 +387,7 @@ print(housing_df_clean["housing_structural_index"].describe())
 housing_df_final = housing_df_clean[
     [
         "GEOID",
+        "total_buildings",
         "poverty_rate",
         "poverty_rate_z",
         "renter_rate",
