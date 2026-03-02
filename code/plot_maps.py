@@ -103,7 +103,13 @@ gdf.plot(
 axes[2].set_title("Log Violation Rate")
 axes[2].axis("off")
 
+chart_path = out_dir / "part1_distribution.png"
+fig.savefig(chart_path, dpi=300, bbox_inches="tight")
+
+print(f"Distribution plot saved to：{chart_path}")
+
 plt.tight_layout()
+
 plt.show()
 
 ## Step2: Top 25% Overlap
@@ -143,6 +149,9 @@ gdf.plot(
 # Triple Hotspo Map
 ax.set_title("Overlap of Top 25%: Econ + Structural + Violations (0–3)")
 ax.axis("off")
+overlap_path = out_dir / "part2_overlap.png"
+fig.savefig(overlap_path, dpi=300, bbox_inches="tight")
+print(f"Overlap map saved to: {overlap_path}")
 plt.show()
 
 fig, ax = plt.subplots(1, 1, figsize=(9, 9))
@@ -153,6 +162,11 @@ gdf[gdf["triple_hotspot"]].plot(color="red", linewidth=0.2, edgecolor="white", a
 
 ax.set_title("Triple-Burden Hotspots")
 ax.axis("off")
+triple_path = out_dir / "part2_highlight.png"
+fig.savefig(triple_path, dpi=300, bbox_inches="tight")
+print(f"Highlight map saved to: {triple_path}")
+
+plt.show()
 plt.show()
 
 # Calculate Relative Risk
