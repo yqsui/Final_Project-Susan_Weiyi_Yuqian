@@ -8,7 +8,7 @@ This project focuses on the spatial distribution and changes of housing risk in 
 ```bash
 conda env create -f requirements.yml
 
-conda activate housing_risk_analysis        # for Windows
+conda activate housing_risk_analysis    # for Windows
 source activate housing_risk_analysis   # for MacOS / Linux
 ```
 
