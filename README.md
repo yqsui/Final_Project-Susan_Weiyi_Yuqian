@@ -24,6 +24,7 @@ data/
   derived-data/                         # Filtered data and output plots
     economic_pressure.csv               # Merged median_household_income and rent_burden with adding the economic pressure index
     housing_structural_features.csv     # Merged poverty_status, tenure_owner_renter and units_in_structure with adding housing structural index
+    building_violation_by_code_rate     # Monthly tract-level violation counts and rates per 1,000 housing units, disaggregated by violation code
     part1_distribution.png              # Visualization of the spatial distribution of the three index
     part2_highlight.png                 # Display of the degree of overlap of the top 25% of three distribution
     part2_overlap.png                   # Hightlight of only tracts with overlap_count = 3
@@ -59,7 +60,13 @@ code/
 
 Download (Google Drive):
 - https://drive.google.com/file/d/1pgeuZq6TKBKSqyTAro4o173iqnzVodFW/view?usp=sharing
-'Link access: anyone with the link can view/download.'
+/
+Link access: anyone with the link can view/download.
 
 After downloading, save it to this exact path (do not rename):
 - `data/raw-data/building_violations_raw.csv`
+
+## Streamlit Link
+-https://finalproject-susanweiyiyuqian-h5doxuwqc6xyifknukjwu2.streamlit.app/
+/
+Here is the link to Streamlit Community Cloud Dashboard.
