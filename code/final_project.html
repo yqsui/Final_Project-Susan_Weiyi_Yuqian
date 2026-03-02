@@ -61,7 +61,7 @@ ul.task-list li input[type="checkbox"] {
   </ul></li>
   <li><a href="#streamlit" id="toc-streamlit" class="nav-link" data-scroll-target="#streamlit">Streamlit</a></li>
   </ul>
-<div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="final_project.pdf"><i class="bi bi-file-pdf"></i>PDF</a></li></ul></div></nav>
+<div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="../final_project.pdf"><i class="bi bi-file-pdf"></i>PDF</a></li></ul></div></nav>
 </div>
 <main class="content" id="quarto-document-content">
 
@@ -87,7 +87,7 @@ ul.task-list li input[type="checkbox"] {
 <section id="group-information" class="level2">
 <h2 class="anchored" data-anchor-id="group-information">Group Information</h2>
 <p>Group Number: 46； Course: Section4 – PPHA 30538<br>
-<strong>Group Members</strong> 1. Susan Zhang (GitHub: SusanYaranZhang, Section 4 – Tue/Thu 11:30 AM – 12:20 PM) 2. Weiyi Wang (GitHub: weiyiwang-611, Section 4 – Tue/Thu 11:30 AM – 12:20 PM) 3. Yuqian Sui (GitHub: yqsui, Section 4 – Tue/Thu 11:30 AM – 12:20 PM)</p>
+<strong>Group Members</strong> 1. Susan Zhang (GitHub: SusanYaranZhang, Section 4) 2. Weiyi Wang (GitHub: weiyiwang-611, Section 4) 3. Yuqian Sui (GitHub: yqsui, Section 4)</p>
 </section>
 <section id="research-question" class="level2">
 <h2 class="anchored" data-anchor-id="research-question">Research Question</h2>
@@ -107,30 +107,22 @@ For housing structural features: <code>poverty_status_B17001.csv</code>, <code>t
 </section>
 <section id="data-progress" class="level3">
 <h3 class="anchored" data-anchor-id="data-progress">Data Progress</h3>
-<section id="building-violations-city-of-chicago" class="level4">
-<h4 class="anchored" data-anchor-id="building-violations-city-of-chicago">Building Violations (City of Chicago)</h4>
+<ul>
+<li>Building Violations (City of Chicago)</li>
+</ul>
 <ol type="1">
 <li>Clean Data: time window filtering, GEOID Standardization, quality checks, and tract-level structure</li>
 <li>Violation Rate Construction<br>
-To construct a comparable violation intensity measure across census tracts, we converted raw violation counts into a standardized rate per 1,000 buildings, using rate = 1,000 × (count / total_buildings).</li>
+We converted raw violation counts into a standardized rate per 1,000 buildings, using rate = 1,000 × (count / total_buildings), which ensures that higher values indicate more violations relative to local building stock, enabling meaningful spatial and temporal comparisons.</li>
 </ol>
 <ul>
-<li>For each tract-month (and optionally by violation code), we aggregated violation records to obtain the total violation count as the numerator.</li>
-<li>We attached a tract-level denominator (total_buildings) and calculated the rate per 1,000 buildings to normalize counts across tracts with different housing stock sizes.</li>
-<li>Creating the violation rate, we ensure that higher values indicate more violations relative to local building stock, enabling meaningful spatial and temporal comparisons in the dashboard.</li>
+<li>Census data for economic pressure and housing structural features</li>
 </ul>
-</section>
-<section id="census-data-for-economic-pressure-and-housing-structural-features" class="level4">
-<h4 class="anchored" data-anchor-id="census-data-for-economic-pressure-and-housing-structural-features">Census data for economic pressure and housing structural features</h4>
 <ol type="1">
 <li>Clean Data: GEOID standardization, column &amp; label cleaning, variable selection (estimate only), and missing data handling</li>
-<li>Standardrization: Economic Pressure Index and Housing Structural Index are created by z-scores.</li>
+<li>Standardrization: Economic Pressure Index and Housing Structural Index are created by z-scores Economic pressure Index: rent_burden_z-index (share of households spending ≥30%) - median_income_z-index (direction reversa)<br>
+Housing Structural Index: poverty_z-index (share of population below the poverty line) + tenure_z-index + housing_age_z-index (share of buildings built in 1939 or earlier)</li>
 </ol>
-<ul>
-<li>Economic pressure Index: rent_burden_z-index (share of households spending ≥30%) - median_income_z-index (direction reversa)</li>
-<li>Housing Structural Index: poverty_z-index (share of population below the poverty line) + tenure_z-index + housing_age_z-index (share of buildings built in 1939 or earlier)</li>
-</ul>
-</section>
 </section>
 <section id="weakness-and-difficulties" class="level3">
 <h3 class="anchored" data-anchor-id="weakness-and-difficulties">Weakness and Difficulties</h3>
@@ -144,30 +136,38 @@ To construct a comparable violation intensity measure across census tracts, we c
 <h2 class="anchored" data-anchor-id="static-visualization">Static Visualization</h2>
 <section id="spatial-distribution" class="level3">
 <h3 class="anchored" data-anchor-id="spatial-distribution">Spatial Distribution</h3>
-<section id="distribution" class="level4">
-<h4 class="anchored" data-anchor-id="distribution">Distribution</h4>
+<p><img src="../data/derived-data/part1_distribution.png" class="img-fluid"></p>
+<section id="distribution" class="level5">
+<h5 class="anchored" data-anchor-id="distribution">Distribution</h5>
 </section>
-<section id="relationship-to-research-questions" class="level4">
-<h4 class="anchored" data-anchor-id="relationship-to-research-questions">Relationship to Research Questions</h4>
+<section id="relationship-to-research-questions" class="level5">
+<h5 class="anchored" data-anchor-id="relationship-to-research-questions">Relationship to Research Questions</h5>
 </section>
 </section>
 <section id="correlation-analysis" class="level3">
 <h3 class="anchored" data-anchor-id="correlation-analysis">Correlation Analysis</h3>
-<section id="distribution-1" class="level4">
-<h4 class="anchored" data-anchor-id="distribution-1">Distribution</h4>
+<section id="distribution-1" class="level5">
+<h5 class="anchored" data-anchor-id="distribution-1">Distribution</h5>
 </section>
-<section id="relationship-to-research-questions-1" class="level4">
-<h4 class="anchored" data-anchor-id="relationship-to-research-questions-1">Relationship to Research Questions</h4>
+<section id="relationship-to-research-questions-1" class="level5">
+<h5 class="anchored" data-anchor-id="relationship-to-research-questions-1">Relationship to Research Questions</h5>
 </section>
 </section>
 </section>
 <section id="streamlit" class="level2">
 <h2 class="anchored" data-anchor-id="streamlit">Streamlit</h2>
-<section id="distribution-2" class="level4">
-<h4 class="anchored" data-anchor-id="distribution-2">Distribution</h4>
+<section id="distribution-2" class="level5">
+<h5 class="anchored" data-anchor-id="distribution-2">Distribution</h5>
+<ul>
+<li>Temporal<br>
+A clear break appears in March–April 2020, plausibly reflecting COVID-19 disruptions to inspections after the stay-at-home order. Patterns stabilize from mid-2021, and average rates trend downward through 2024, likely combining real changes and enforcement/recording dynamics.</li>
+<li>Spatial<br>
+Violation rates show persistent within-city imbalance: hotspots repeatedly cluster in Chicago’s southwest corridor, while many north-side and lakefront areas remain relatively low. Relative-to-city maps place hotspots in similar locations, suggesting stable spatial concentration rather than random fluctuation.</li>
+</ul>
 </section>
-<section id="relationship-to-research-questions-2" class="level4">
-<h4 class="anchored" data-anchor-id="relationship-to-research-questions-2">Relationship to Research Questions</h4>
+<section id="relationship-to-research-questions-2" class="level5">
+<h5 class="anchored" data-anchor-id="relationship-to-research-questions-2">Relationship to Research Questions</h5>
+<p>These patterns motivate two questions: Firstly, why do some tracts persistently exhibit higher violation intensity than others; Secondly, to what extent do tract-level economic pressure and structural vulnerability explain the location and persistence of hotspots.</p>
 </section>
 </section>
 

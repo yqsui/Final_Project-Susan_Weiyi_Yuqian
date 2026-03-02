@@ -1,9 +1,19 @@
 ---
-title: "Chicago Housing Risk Analysis:   Economic and Housing Structural Determinants of Building Violations"
+title: "Chicago Housing Risk Analysis: Economic and Housing Structural Determinants of Building Violations"
 format:
   html:
     toc: true
-  pdf: default
+  pdf:
+    geometry: margin=0.7in
+    include-in-header:
+      text: |
+        \usepackage{etoolbox}
+        \makeatletter
+        \patchcmd{\maketitle}
+          {\vskip 1.8em}
+          {\vskip 0.8em}
+          {}{}
+        \makeatother
 execute:
   echo: false
   warning: false
@@ -13,9 +23,9 @@ execute:
 Group Number: 46；
 Course: Section4 -- PPHA 30538  
 **Group Members**
-1. Susan Zhang (GitHub: SusanYaranZhang, Section 4 – Tue/Thu 11:30 AM – 12:20 PM)
-2. Weiyi Wang (GitHub: weiyiwang-611, Section 4 – Tue/Thu 11:30 AM – 12:20 PM)
-3. Yuqian Sui (GitHub: yqsui, Section 4 – Tue/Thu 11:30 AM – 12:20 PM)
+1. Susan Zhang (GitHub: SusanYaranZhang, Section 4)
+2. Weiyi Wang (GitHub: weiyiwang-611, Section 4)
+3. Yuqian Sui (GitHub: yqsui, Section 4)
 
 ## Research Question
 1. How do housing violations vary across time and neighborhoods?
@@ -30,19 +40,15 @@ For economic pressure: `median_household_income_B19013.csv` and `rent_burden_B25
 For housing structural features: `poverty_status_B17001.csv`, `tenure_owner_renter_B25003.csv`, and `units_in_structure_B25024.csv`
 
 ### Data Progress
-#### Building Violations (City of Chicago)
+- Building Violations (City of Chicago)
 1. Clean Data: time window filtering, GEOID Standardization, quality checks, and tract-level structure
 2. Violation Rate Construction  
-To construct a comparable violation intensity measure across census tracts, we converted raw violation counts into a standardized rate per 1,000 buildings, using rate = 1,000 × (count / total_buildings).
-- For each tract-month (and optionally by violation code), we aggregated violation records to obtain the total violation count as the numerator.
-- We attached a tract-level denominator (total_buildings) and calculated the rate per 1,000 buildings to normalize counts across tracts with different housing stock sizes.
-- Creating the violation rate, we ensure that higher values indicate more violations relative to local building stock, enabling meaningful spatial and temporal comparisons in the dashboard.
-
-#### Census data for economic pressure and housing structural features
+We converted raw violation counts into a standardized rate per 1,000 buildings, using rate = 1,000 × (count / total_buildings), which ensures that higher values indicate more violations relative to local building stock, enabling meaningful spatial and temporal comparisons.
+- Census data for economic pressure and housing structural features
 1. Clean Data: GEOID standardization, column & label cleaning, variable selection (estimate only), and missing data handling
-2. Standardrization: Economic Pressure Index and Housing Structural Index are created by z-scores. 
-- Economic pressure Index: rent_burden_z-index (share of households spending ≥30%) - median_income_z-index (direction reversa)
-- Housing Structural Index: poverty_z-index (share of population below the poverty line) + tenure_z-index + housing_age_z-index (share of buildings built in 1939 or earlier)
+2. Standardrization: Economic Pressure Index and Housing Structural Index are created by z-scores
+Economic pressure Index: rent_burden_z-index (share of households spending ≥30%) - median_income_z-index (direction reversa)  
+Housing Structural Index: poverty_z-index (share of population below the poverty line) + tenure_z-index + housing_age_z-index (share of buildings built in 1939 or earlier)  
 
 ### Weakness and Difficulties
 1. Relative rather than absolute measure: Because we use z-score standardization, the index captures relative differences within Cook County rather than absolute levels of housing pressure.
@@ -50,18 +56,29 @@ To construct a comparable violation intensity measure across census tracts, we c
 
 ## Static Visualization
 ### Spatial Distribution
-#### Distribution
-#### Relationship to Research Questions
+![](../data/derived-data/part1_distribution.png)
+
+```{=latex}
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=0.35\textwidth,keepaspectratio]{../data/derived-data/part2_overlap.png}
+\hspace{0.02\textwidth}
+\includegraphics[width=0.30\textwidth,keepaspectratio]{../data/derived-data/part2_highlight.png}
+\end{figure}
+```
+##### Distribution
+##### Relationship to Research Questions
 
 ### Correlation Analysis
-#### Distribution
-#### Relationship to Research Questions
+##### Distribution
+##### Relationship to Research Questions
 
 ## Streamlit
-#### Distribution
+##### Distribution
 - Temporal  
 A clear break appears in March–April 2020, plausibly reflecting COVID-19 disruptions to inspections after the stay-at-home order. Patterns stabilize from mid-2021, and average rates trend downward through 2024, likely combining real changes and enforcement/recording dynamics.
 - Spatial  
 Violation rates show persistent within-city imbalance: hotspots repeatedly cluster in Chicago’s southwest corridor, while many north-side and lakefront areas remain relatively low. Relative-to-city maps place hotspots in similar locations, suggesting stable spatial concentration rather than random fluctuation.
-#### Relationship to Research Questions
+
+##### Relationship to Research Questions
 These patterns motivate two questions: Firstly, why do some tracts persistently exhibit higher violation intensity than others; Secondly, to what extent do tract-level economic pressure and structural vulnerability explain the location and persistence of hotspots.
