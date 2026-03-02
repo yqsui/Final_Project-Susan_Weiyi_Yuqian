@@ -26,9 +26,16 @@ data/
   derived-data/                         # Filtered data and output plots
     economic_pressure.csv               # Merge median_household_income and rent_burden with adding the economic pressure index
     housing_structural_features.csv     # Merge poverty_status, tenure_owner_renter and units_in_structure with adding the housing structural index
+    part1_distribution.png              # Part of map plot
+    part2_highlight.png                 # Part of map plot
+    part2_overlap.png                   # Part of map plot
+    scatter_plot.png                    # Scatter plot of relationships between economic pressure index, housing structural index & building violation rate
+
 code/
   preprocessing.py                      # Filters all raw data
-  xxxplot.py
+  plot_maps.py                          # Draw map plot
+  plot_scatter.py                       # Draw scatter plot
+  app.py                                # Create Streamlit app
 ```
 
 ## Usage
