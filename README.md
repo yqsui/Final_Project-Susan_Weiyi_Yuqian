@@ -60,13 +60,11 @@ code/
 
 Download (Google Drive):
 - https://drive.google.com/file/d/1pgeuZq6TKBKSqyTAro4o173iqnzVodFW/view?usp=sharing
-/
-Link access: anyone with the link can view/download.
+- Link access: anyone with the link can view/download.
 
 After downloading, save it to this exact path (do not rename):
 - `data/raw-data/building_violations_raw.csv`
 
 ## Streamlit Link
--https://finalproject-susanweiyiyuqian-h5doxuwqc6xyifknukjwu2.streamlit.app/
-/
-Here is the link to Streamlit Community Cloud Dashboard.
+- https://finalproject-susanweiyiyuqian-h5doxuwqc6xyifknukjwu2.streamlit.app/
+- Here is the link to Streamlit Community Cloud Dashboard.
