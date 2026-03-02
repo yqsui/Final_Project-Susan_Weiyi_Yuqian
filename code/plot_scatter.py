@@ -55,7 +55,7 @@ econ_reg = alt.Chart(merged).transform_regression(
 )
 
 chart_econ = alt.layer(econ_points, econ_reg).properties(
-    title={"text": "Economic Pressure Index vs Building Violation Rate", "fontSize":14, "fontWeight":"bold"}
+    title={"text": "Economic Pressure vs Building Violation Rate", "fontSize":14, "fontWeight":"bold"}
 )
 
 # Plot B: housing_structural_index vs. avg_monthly_total_violation_rate
@@ -72,7 +72,7 @@ housing_reg = alt.Chart(merged).transform_regression(
 )
 
 chart_housing = alt.layer(housing_points, housing_reg).properties(
-    title={"text": "Housing Structural Index vs Building Violation Rate", "fontSize":14, "fontWeight":"bold"}
+    title={"text": "Housing Structural Features vs Building Violation Rate", "fontSize":14, "fontWeight":"bold"}
 )
 
 # Integration

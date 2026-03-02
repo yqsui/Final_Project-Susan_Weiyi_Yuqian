@@ -33,7 +33,7 @@ ul.task-list li input[type="checkbox"] {
 <link href="final_project_files/libs/quarto-html/quarto-syntax-highlighting-de070a7b0ab54f8780927367ac907214.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="final_project_files/libs/bootstrap/bootstrap.min.js"></script>
 <link href="final_project_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="final_project_files/libs/bootstrap/bootstrap-81267100e462c21b3d6c0d5bf76a3417.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="final_project_files/libs/bootstrap/bootstrap-bb462d781dde1847d9e3ccf7736099dd.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 
 
 </head>
@@ -48,7 +48,7 @@ ul.task-list li input[type="checkbox"] {
   <ul>
   <li><a href="#group-information" id="toc-group-information" class="nav-link active" data-scroll-target="#group-information">Group Information</a></li>
   <li><a href="#research-question" id="toc-research-question" class="nav-link" data-scroll-target="#research-question">Research Question</a></li>
-  <li><a href="#data-and-apporach" id="toc-data-and-apporach" class="nav-link" data-scroll-target="#data-and-apporach">Data and Apporach</a>
+  <li><a href="#data-and-approach" id="toc-data-and-approach" class="nav-link" data-scroll-target="#data-and-approach">Data and Approach</a>
   <ul class="collapse">
   <li><a href="#data-resources" id="toc-data-resources" class="nav-link" data-scroll-target="#data-resources">Data Resources</a></li>
   <li><a href="#data-progress" id="toc-data-progress" class="nav-link" data-scroll-target="#data-progress">Data Progress</a></li>
@@ -61,7 +61,7 @@ ul.task-list li input[type="checkbox"] {
   </ul></li>
   <li><a href="#streamlit" id="toc-streamlit" class="nav-link" data-scroll-target="#streamlit">Streamlit</a></li>
   </ul>
-<div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="../final_project.pdf"><i class="bi bi-file-pdf"></i>PDF</a></li></ul></div></nav>
+<div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="final_project.pdf"><i class="bi bi-file-pdf"></i>PDF</a></li></ul></div></nav>
 </div>
 <main class="content" id="quarto-document-content">
 
@@ -86,8 +86,9 @@ ul.task-list li input[type="checkbox"] {
 
 <section id="group-information" class="level2">
 <h2 class="anchored" data-anchor-id="group-information">Group Information</h2>
-<p>Group Number: 46； Course: Section4 – PPHA 30538<br>
-<strong>Group Members</strong> 1. Susan Zhang (GitHub: SusanYaranZhang, Section 4) 2. Weiyi Wang (GitHub: weiyiwang-611, Section 4) 3. Yuqian Sui (GitHub: yqsui, Section 4)</p>
+<p><strong>Group Number:</strong> 46<br>
+<strong>Course:</strong> Section4 – PPHA 30538<br>
+<strong>Group Members:</strong> Susan Zhang (GitHub: SusanYaranZhang, Section 4); Weiyi Wang (GitHub: weiyiwang-611, Section 4); Yuqian Sui (GitHub: yqsui, Section 4)</p>
 </section>
 <section id="research-question" class="level2">
 <h2 class="anchored" data-anchor-id="research-question">Research Question</h2>
@@ -96,39 +97,42 @@ ul.task-list li input[type="checkbox"] {
 <li>To what extent are these patterns associated with economic pressure and housing structural features?</li>
 </ol>
 </section>
-<section id="data-and-apporach" class="level2">
-<h2 class="anchored" data-anchor-id="data-and-apporach">Data and Apporach</h2>
+<section id="data-and-approach" class="level2">
+<h2 class="anchored" data-anchor-id="data-and-approach">Data and Approach</h2>
 <section id="data-resources" class="level3">
 <h3 class="anchored" data-anchor-id="data-resources">Data Resources</h3>
-<p>The building violations dataset is sourced from the City of Chicago Data Portal, contains reported building violations with dates, descriptions &amp; codes, and location information: <code>building_violations_raw</code></p>
+<p>The building violations dataset is sourced from the City of Chicago Data Portal, contains reported building violations with dates, descriptions &amp; codes, and location information: <code>building_violations_raw</code>.</p>
 <p>The following census resources are drawn from United States Census Bureau, American Community Survey Most recent 5-year release, Cook County, Illinois:<br>
-For economic pressure: <code>median_household_income_B19013.csv</code> and <code>rent_burden_B25070.csv</code><br>
-For housing structural features: <code>poverty_status_B17001.csv</code>, <code>tenure_owner_renter_B25003.csv</code>, and <code>units_in_structure_B25024.csv</code></p>
+For economic pressure: <code>median_household_income_B19013.csv</code> and <code>rent_burden_B25070.csv</code>.<br>
+For housing structural features: <code>poverty_status_B17001.csv</code>, <code>tenure_owner_renter_B25003.csv</code>, and <code>units_in_structure_B25024.csv</code>.</p>
 </section>
 <section id="data-progress" class="level3">
 <h3 class="anchored" data-anchor-id="data-progress">Data Progress</h3>
-<ul>
+<ol type="1">
 <li>Building Violations (City of Chicago)</li>
-</ul>
-<ol type="1">
-<li>Clean Data: time window filtering, GEOID Standardization, quality checks, and tract-level structure</li>
-<li>Violation Rate Construction<br>
-We converted raw violation counts into a standardized rate per 1,000 buildings, using rate = 1,000 × (count / total_buildings), which ensures that higher values indicate more violations relative to local building stock, enabling meaningful spatial and temporal comparisons.</li>
 </ol>
 <ul>
-<li>Census data for economic pressure and housing structural features</li>
+<li>Clean Data: Time window filtering, GEOID Standardization, quality checks, and tract-level structure<br>
+</li>
+<li>Violation Rate Construction: We converted raw violation counts into a standardized rate per 1,000 units, using rate = 1,000 × (count / total units), which ensures that higher values indicate more violations relative to local building stock, enabling meaningful spatial and temporal comparisons.<br>
+</li>
 </ul>
-<ol type="1">
-<li>Clean Data: GEOID standardization, column &amp; label cleaning, variable selection (estimate only), and missing data handling</li>
-<li>Standardrization: Economic Pressure Index and Housing Structural Index are created by z-scores Economic pressure Index: rent_burden_z-index (share of households spending ≥30%) - median_income_z-index (direction reversa)<br>
-Housing Structural Index: poverty_z-index (share of population below the poverty line) + tenure_z-index + housing_age_z-index (share of buildings built in 1939 or earlier)</li>
+<ol start="2" type="1">
+<li>Census data for Economic Pressure and Housing Structural Features</li>
 </ol>
+<ul>
+<li>Clean Data: GEOID standardization, column &amp; label cleaning, variable selection (estimate only), and missing data handling<br>
+</li>
+<li>Standardization: Economic Pressure Index and Housing Structural Index are created by z-scores<br>
+Economic pressure Index: rent_burden_z-index (share of households spending ≥30%) - median_income_z-index (direction reversa)<br>
+Housing Structural Index: poverty_z-index (share of population below the poverty line) + tenure_z-index (share of renter) + housing_age_z-index (share of buildings built in 1939 or earlier)</li>
+</ul>
 </section>
 <section id="weakness-and-difficulties" class="level3">
 <h3 class="anchored" data-anchor-id="weakness-and-difficulties">Weakness and Difficulties</h3>
 <ol type="1">
 <li>Relative rather than absolute measure: Because we use z-score standardization, the index captures relative differences within Cook County rather than absolute levels of housing pressure.</li>
-<li>Equal wiighting assumption: By aggregating standardized variables, we implicitly assume equal contribution of each component, although their real-world impacts on housing pressure may differ.</li>
+<li>Equal weighting assumption: By aggregating standardized variables, we implicitly assume equal contribution of each component, although their real-world impacts on housing pressure may differ.</li>
 </ol>
 </section>
 </section>
@@ -136,28 +140,21 @@ Housing Structural Index: poverty_z-index (share of population below the poverty
 <h2 class="anchored" data-anchor-id="static-visualization">Static Visualization</h2>
 <section id="spatial-distribution" class="level3">
 <h3 class="anchored" data-anchor-id="spatial-distribution">Spatial Distribution</h3>
-<p><img src="../data/derived-data/part1_distribution.png" class="img-fluid"></p>
-<section id="distribution" class="level5">
-<h5 class="anchored" data-anchor-id="distribution">Distribution</h5>
-</section>
-<section id="relationship-to-research-questions" class="level5">
-<h5 class="anchored" data-anchor-id="relationship-to-research-questions">Relationship to Research Questions</h5>
-</section>
+<p><img src="../data/derived-data/part1_distribution.png" class="img-fluid"> Economic pressure is higher in the southern and southwestern parts of Chicago, while northern and lakefront areas show relatively lower levels. Structural vulnerability exhibits an even stronger spatial concentration, clustering primarily in the south and southwest. The spatial pattern of building violations closely aligns with these high-risk areas, particularly with structural vulnerability.<br>
+Overall, violations are not randomly distributed but are concentrated in neighborhoods facing greater economic and structural stress.</p>
+<p>These Triple-Burden Hotspots (left) highlight tracts that simultaneously rank in the top 25% for economic pressure, structural vulnerability, and violation rates. The hotspots are concentrated almost entirely in the southern and southwestern areas of the city. This suggests that the highest violation rates occur where multiple forms of neighborhood-level disadvantage overlap.<br>
+The overlap map (right) highlights the areas with three compounded risks. The clustering in the south reinforces the idea that housing violations are embedded in layered structural and economic inequality.</p>
 </section>
 <section id="correlation-analysis" class="level3">
 <h3 class="anchored" data-anchor-id="correlation-analysis">Correlation Analysis</h3>
-<section id="distribution-1" class="level5">
-<h5 class="anchored" data-anchor-id="distribution-1">Distribution</h5>
-</section>
-<section id="relationship-to-research-questions-1" class="level5">
-<h5 class="anchored" data-anchor-id="relationship-to-research-questions-1">Relationship to Research Questions</h5>
-</section>
+<p><img src="../data/derived-data/scatter_plot.png" class="img-fluid"><br>
+The plot indicates that housing structural vulnerability is a more consistent predictor of building violation rates than neighborhood economic pressure: left plot shows a weak positive linear trend between the Economic Pressure variable and average monthly building violation rate, while right plot shows a moderately stronger positive linear trend between the Housing Structural Feature and average monthly building violation rate.</p>
 </section>
 </section>
 <section id="streamlit" class="level2">
 <h2 class="anchored" data-anchor-id="streamlit">Streamlit</h2>
-<section id="distribution-2" class="level5">
-<h5 class="anchored" data-anchor-id="distribution-2">Distribution</h5>
+<section id="distribution" class="level5">
+<h5 class="anchored" data-anchor-id="distribution">Distribution</h5>
 <ul>
 <li>Temporal<br>
 A clear break appears in March–April 2020, plausibly reflecting COVID-19 disruptions to inspections after the stay-at-home order. Patterns stabilize from mid-2021, and average rates trend downward through 2024, likely combining real changes and enforcement/recording dynamics.</li>
@@ -165,8 +162,8 @@ A clear break appears in March–April 2020, plausibly reflecting COVID-19 disru
 Violation rates show persistent within-city imbalance: hotspots repeatedly cluster in Chicago’s southwest corridor, while many north-side and lakefront areas remain relatively low. Relative-to-city maps place hotspots in similar locations, suggesting stable spatial concentration rather than random fluctuation.</li>
 </ul>
 </section>
-<section id="relationship-to-research-questions-2" class="level5">
-<h5 class="anchored" data-anchor-id="relationship-to-research-questions-2">Relationship to Research Questions</h5>
+<section id="relationship-to-research-questions" class="level5">
+<h5 class="anchored" data-anchor-id="relationship-to-research-questions">Relationship to Research Questions</h5>
 <p>These patterns motivate two questions: Firstly, why do some tracts persistently exhibit higher violation intensity than others; Secondly, to what extent do tract-level economic pressure and structural vulnerability explain the location and persistence of hotspots.</p>
 </section>
 </section>
