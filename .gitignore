@@ -4,13 +4,6 @@
 **/.Rhistory
 
 data/raw-data/building_violations_raw.csv
-data/raw-data/tl_2024_17_tract.cpg
-data/raw-data/tl_2024_17_tract.dbf
-data/raw-data/tl_2024_17_tract.prj
-data/raw-data/tl_2024_17_tract.shp
-data/raw-data/tl_2024_17_tract.shp.ea.iso.xml
-data/raw-data/tl_2024_17_tract.shp.iso.xml
-data/raw-data/tl_2024_17_tract.shx
 
 data/derived-data/building_violation_by_code.csv
 
