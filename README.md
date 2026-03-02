@@ -1,5 +1,3 @@
-[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/YlfKWlZ5)
-
 # Final_Project-Susan_Weiyi_Yuqian
 This project focuses on the spatial distribution and changes of housing risk in Chicago, and examines whether it overlaps with housing quality issues and economic pressure.
 
@@ -24,16 +22,16 @@ data/
     tenure_owner_renter_B25003.csv      # Renter and owner counting
     units_in_structure_B25024.csv       # Building age classified by decades
   derived-data/                         # Filtered data and output plots
-    economic_pressure.csv               # Merge median_household_income and rent_burden with adding the economic pressure index
-    housing_structural_features.csv     # Merge poverty_status, tenure_owner_renter and units_in_structure with adding the housing structural index
-    part1_distribution.png              # Part of map plot
-    part2_highlight.png                 # Part of map plot
-    part2_overlap.png                   # Part of map plot
+    economic_pressure.csv               # Merged median_household_income and rent_burden with adding the economic pressure index
+    housing_structural_features.csv     # Merged poverty_status, tenure_owner_renter and units_in_structure with adding the housing structural index
+    part1_distribution.png              # Visualisation of the spatial distribution of economic pressure, structural vulnerability, and violation intensity
+    part2_highlight.png                 # Display of the degree of overlap of the top 25% of three distribution
+    part2_overlap.png                   # Hightlight of only tracts with overlap_count = 3
     scatter_plot.png                    # Scatter plot of relationships between economic pressure index, housing structural index & building violation rate
 
 code/
   preprocessing.py                      # Filters all raw data
-  plot_maps.py                          # Draw map plot
+  plot_maps.py                          # Geographic distribution and overlap of economic pressure, structural vulnerability, and violation intensity
   plot_scatter.py                       # Draw scatter plot
   app.py                                # Create Streamlit app
 ```
