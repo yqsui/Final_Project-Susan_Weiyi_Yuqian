@@ -2,6 +2,8 @@ import pandas as pd
 import altair as alt
 from pathlib import Path
 import vl_convert as vlc
+import scipy.stats as stats
+import numpy as np
 
 # Path
 script_dir = Path(__file__).parent
@@ -37,6 +39,29 @@ merged = merged.merge(housing_needed, on="GEOID", how="inner")
 
 print(f"Number of valid data rows after merging: {len(merged)}")
 print(f"NA check:\n{merged.isna().sum()}")
+
+# Correlation coefficient and p-value
+econ_corr, econ_p = stats.pearsonr(
+    merged["economic_pressure_index"], 
+    merged["avg_monthly_total_violation_rate"]
+)
+
+housing_corr, housing_p = stats.pearsonr(
+    merged["housing_structural_index"], 
+    merged["avg_monthly_total_violation_rate"]
+)
+
+print("Pearson Correlation:")
+print(f"1. Economic Pressure Index vs Average Monthly Total Violation Rate:")
+print(f"   Correlation coefficient = {econ_corr:.4f}")
+print(f"   p-value = {econ_p:.6f}")
+
+print(f"\n2. Housing Structural Index vs Average Monthly Total Violation Rate:")
+print(f"   Correlation coefficient = {housing_corr:.4f}")
+print(f"   p-value = {housing_p:.6f}")
+
+corr_matrix = merged[["economic_pressure_index", "housing_structural_index", "avg_monthly_total_violation_rate"]].corr()
+print(f"\n{corr_matrix.round(4)}")
 
 # Plot
 alt.data_transformers.disable_max_rows()
