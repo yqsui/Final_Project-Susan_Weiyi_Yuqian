@@ -6,8 +6,10 @@ This project focuses on the spatial distribution and changes of housing risk in 
 ## Setup
 
 ```bash
-conda env create -f environment.yml
-conda activate fire_analysis
+conda env create -f requirements.yml
+
+conda activate housing_risk_analysis        # for Windows
+source activate housing_risk_analysis   # for MacOS / Linux
 ```
 
 ## Project Structure
@@ -31,24 +33,20 @@ code/
 
 ## Usage
 
-1. Run below code in terminal to create and activate environment:
-   ```bash
-   conda env create -f environment.yml
-
-   conda activate housing_risk_analysis        # for Windows
-   source activate housing_economic_analysis   # for MacOS / Linux
-
-   conda env update -f environment.yml --prune # for updating
-   ```
-
-2. Run preprocessing to filter data:
+1. Run preprocessing to filter data:
    ```bash
    code/preprocessing.py
    ```
 
-3. Generate the xxx plot:
+2. Generate the plots:
    ```bash
-   code/xxx.py
+   code/plot_maps.py
+   code/plot_scatter.py
+   ```
+
+3. Generate the Streamlit app:
+   ```bash
+   code/app.py
    ```
 
 ## Large Raw Dataset
