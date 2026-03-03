@@ -15,6 +15,7 @@ format:
           \vspace{0.5em}
         }
         \makeatother
+        \usepackage{float}
 execute:
   echo: false
   warning: false
@@ -42,13 +43,13 @@ For housing structural features: `poverty_status_B17001.csv`, `tenure_owner_rent
 
 ### Data Progress
 1. Building Violations (City of Chicago)
-- Clean Data: Time window filtering, GEOID Standardization, quality checks, and tract-level structure  
-- Violation Rate Construction: We converted raw violation counts into a standardized rate per 1,000 units, using rate = 1,000 × (count / total units), which ensures that higher values indicate more violations relative to local building stock, enabling meaningful spatial and temporal comparisons.  
+- Clean Data: Time window filtering, GEOID Standardization, quality checks, and tract-level structure
+- Violation Rate: We converted raw violation counts into a standardized rate per 1,000 units, using rate = 1,000 × (count / total units), which ensures that higher values indicate more violations relative to local building stock, enabling meaningful spatial and temporal comparisons.
 2. Census data for Economic Pressure and Housing Structural Features
-- Clean Data: GEOID standardization, column & label cleaning, variable selection (estimate only), and missing data handling  
-- Standardization: Economic Pressure Index and Housing Structural Index are created by z-scores  
-Economic pressure Index: rent_burden_z-index (share of households spending ≥30%) - median_income_z-index (direction reversa)  
-Housing Structural Index: poverty_z-index (share of population below the poverty line) + tenure_z-index (share of renter) + housing_age_z-index (share of buildings built in 1939 or earlier)
+- Clean Data: GEOID standardization, column & label cleaning, variable selection (estimate only), and missing data handling
+- Standardization: Created Economic Pressure Index and Housing Structural Index with z-scores.
+Economic Pressure Index: rent_burden_z-index (share of households spending ≥30%) - income_z-index (direction reversa).
+Housing Structural Index: poverty_z-index (share of population below poverty line) + tenure_z-index (share of renter) + housing_age_z-index (share of units built in 1939 or earlier).
 
 ### Weakness and Difficulties
 1. Relative rather than absolute measure: Because we use z-score standardization, the index captures relative differences within Cook County rather than absolute levels of housing pressure.
@@ -57,30 +58,30 @@ Housing Structural Index: poverty_z-index (share of population below the poverty
 ## Static Visualization
 ### Spatial Distribution
 ![](../data/derived-data/part1_distribution.png)
-Economic pressure is higher in the southern and southwestern parts of Chicago, while northern and lakefront areas show relatively lower levels. Structural vulnerability exhibits an even stronger spatial concentration, clustering primarily in the south and southwest. The spatial pattern of building violations closely aligns with these high-risk areas, particularly with structural vulnerability.  
+Economic pressure is higher in the southern and southwestern parts of Chicago, lower in northern and lakefront areas. Housing structural features exhibits an even stronger spatial concentration, clustering primarily in the south and southwest. The spatial pattern of building violations closely aligns with these high-risk areas, particularly with structural vulnerability.  
 Overall, violations are not randomly distributed but are concentrated in neighborhoods facing greater economic and structural stress.
+
 ```{=latex}
-\begin{figure}[!ht]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.35\textwidth,keepaspectratio]{../data/derived-data/part2_overlap.png}
 \hspace{0.02\textwidth}
 \includegraphics[width=0.30\textwidth,keepaspectratio]{../data/derived-data/part2_highlight.png}
 \end{figure}
 ```
-These Triple-Burden Hotspots (left) highlight tracts that simultaneously rank in the top 25% for economic pressure, structural vulnerability, and violation rates. The hotspots are concentrated almost entirely in the southern and southwestern areas of the city. This suggests that the highest violation rates occur where multiple forms of neighborhood-level disadvantage overlap.  
-The overlap map (right) highlights the areas with three compounded risks. The clustering in the south reinforces the idea that housing violations are embedded in layered structural and economic inequality.
+These Triple-Burden Hotspots (left) highlight tracts that simultaneously rank in the top 25% for economic pressure, structural features, and violation rates. The hotspots are concentrated almost entirely in the southern and southwestern areas of the city. This suggests that the highest violation rates occur where multiple forms of neighborhood-level disadvantage overlap.  
+The right map highlights the areas with all three compounded risks. The clustering in the south reinforces the idea that housing violations are embedded in layered structural and economic inequality.  
 
 ### Correlation Analysis
 ![](../data/derived-data/scatter_plot.png)  
 The plot indicates that housing structural vulnerability is a more consistent predictor of building violation rates than neighborhood economic pressure: left plot shows a weak positive linear trend between the Economic Pressure variable and average monthly building violation rate, while right plot shows a moderately stronger positive linear trend between the Housing Structural Feature and average monthly building violation rate.
-
 
 ## Streamlit
 ##### Distribution
 - Temporal  
 A clear break appears in March–April 2020, plausibly reflecting COVID-19 disruptions to inspections after the stay-at-home order. Patterns stabilize from mid-2021, and average rates trend downward through 2024, likely combining real changes and enforcement/recording dynamics.
 - Spatial  
-Violation rates show persistent within-city imbalance: hotspots repeatedly cluster in Chicago’s southwest corridor, while many north-side and lakefront areas remain relatively low. Relative-to-city maps place hotspots in similar locations, suggesting stable spatial concentration rather than random fluctuation.
+Violation rates show persistent within-city imbalance: hotspots repeatedly cluster in Chicago’s southwest corridor, while north-side and lakefront areas remain relatively low. Relative-to-city maps place hotspots in similar locations, suggesting stable spatial concentration rather than random fluctuation.
 
 ##### Relationship to Research Questions
 These patterns motivate two questions: Firstly, why do some tracts persistently exhibit higher violation intensity than others; Secondly, to what extent do tract-level economic pressure and structural vulnerability explain the location and persistence of hotspots.

@@ -33,7 +33,7 @@ ul.task-list li input[type="checkbox"] {
 <link href="final_project_files/libs/quarto-html/quarto-syntax-highlighting-de070a7b0ab54f8780927367ac907214.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="final_project_files/libs/bootstrap/bootstrap.min.js"></script>
 <link href="final_project_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="final_project_files/libs/bootstrap/bootstrap-bb462d781dde1847d9e3ccf7736099dd.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="final_project_files/libs/bootstrap/bootstrap-81267100e462c21b3d6c0d5bf76a3417.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 
 
 </head>
@@ -61,7 +61,7 @@ ul.task-list li input[type="checkbox"] {
   </ul></li>
   <li><a href="#streamlit" id="toc-streamlit" class="nav-link" data-scroll-target="#streamlit">Streamlit</a></li>
   </ul>
-<div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="final_project.pdf"><i class="bi bi-file-pdf"></i>PDF</a></li></ul></div></nav>
+<div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="../final_project.pdf"><i class="bi bi-file-pdf"></i>PDF</a></li></ul></div></nav>
 </div>
 <main class="content" id="quarto-document-content">
 
@@ -112,20 +112,15 @@ For housing structural features: <code>poverty_status_B17001.csv</code>, <code>t
 <li>Building Violations (City of Chicago)</li>
 </ol>
 <ul>
-<li>Clean Data: Time window filtering, GEOID Standardization, quality checks, and tract-level structure<br>
-</li>
-<li>Violation Rate Construction: We converted raw violation counts into a standardized rate per 1,000 units, using rate = 1,000 × (count / total units), which ensures that higher values indicate more violations relative to local building stock, enabling meaningful spatial and temporal comparisons.<br>
-</li>
+<li>Clean Data: Time window filtering, GEOID Standardization, quality checks, and tract-level structure</li>
+<li>Violation Rate: We converted raw violation counts into a standardized rate per 1,000 units, using rate = 1,000 × (count / total units), which ensures that higher values indicate more violations relative to local building stock, enabling meaningful spatial and temporal comparisons.</li>
 </ul>
 <ol start="2" type="1">
 <li>Census data for Economic Pressure and Housing Structural Features</li>
 </ol>
 <ul>
-<li>Clean Data: GEOID standardization, column &amp; label cleaning, variable selection (estimate only), and missing data handling<br>
-</li>
-<li>Standardization: Economic Pressure Index and Housing Structural Index are created by z-scores<br>
-Economic pressure Index: rent_burden_z-index (share of households spending ≥30%) - median_income_z-index (direction reversa)<br>
-Housing Structural Index: poverty_z-index (share of population below the poverty line) + tenure_z-index (share of renter) + housing_age_z-index (share of buildings built in 1939 or earlier)</li>
+<li>Clean Data: GEOID standardization, column &amp; label cleaning, variable selection (estimate only), and missing data handling</li>
+<li>Standardization: Created Economic Pressure Index and Housing Structural Index with z-scores. Economic Pressure Index: rent_burden_z-index (share of households spending ≥30%) - income_z-index (direction reversa). Housing Structural Index: poverty_z-index (share of population below poverty line) + tenure_z-index (share of renter) + housing_age_z-index (share of units built in 1939 or earlier).</li>
 </ul>
 </section>
 <section id="weakness-and-difficulties" class="level3">
@@ -140,10 +135,10 @@ Housing Structural Index: poverty_z-index (share of population below the poverty
 <h2 class="anchored" data-anchor-id="static-visualization">Static Visualization</h2>
 <section id="spatial-distribution" class="level3">
 <h3 class="anchored" data-anchor-id="spatial-distribution">Spatial Distribution</h3>
-<p><img src="../data/derived-data/part1_distribution.png" class="img-fluid"> Economic pressure is higher in the southern and southwestern parts of Chicago, while northern and lakefront areas show relatively lower levels. Structural vulnerability exhibits an even stronger spatial concentration, clustering primarily in the south and southwest. The spatial pattern of building violations closely aligns with these high-risk areas, particularly with structural vulnerability.<br>
+<p><img src="../data/derived-data/part1_distribution.png" class="img-fluid"> Economic pressure is higher in the southern and southwestern parts of Chicago, lower in northern and lakefront areas. Housing structural features exhibits an even stronger spatial concentration, clustering primarily in the south and southwest. The spatial pattern of building violations closely aligns with these high-risk areas, particularly with structural vulnerability.<br>
 Overall, violations are not randomly distributed but are concentrated in neighborhoods facing greater economic and structural stress.</p>
-<p>These Triple-Burden Hotspots (left) highlight tracts that simultaneously rank in the top 25% for economic pressure, structural vulnerability, and violation rates. The hotspots are concentrated almost entirely in the southern and southwestern areas of the city. This suggests that the highest violation rates occur where multiple forms of neighborhood-level disadvantage overlap.<br>
-The overlap map (right) highlights the areas with three compounded risks. The clustering in the south reinforces the idea that housing violations are embedded in layered structural and economic inequality.</p>
+<p>These Triple-Burden Hotspots (left) highlight tracts that simultaneously rank in the top 25% for economic pressure, structural features, and violation rates. The hotspots are concentrated almost entirely in the southern and southwestern areas of the city. This suggests that the highest violation rates occur where multiple forms of neighborhood-level disadvantage overlap.<br>
+The right map highlights the areas with all three compounded risks. The clustering in the south reinforces the idea that housing violations are embedded in layered structural and economic inequality.</p>
 </section>
 <section id="correlation-analysis" class="level3">
 <h3 class="anchored" data-anchor-id="correlation-analysis">Correlation Analysis</h3>
@@ -159,7 +154,7 @@ The plot indicates that housing structural vulnerability is a more consistent pr
 <li>Temporal<br>
 A clear break appears in March–April 2020, plausibly reflecting COVID-19 disruptions to inspections after the stay-at-home order. Patterns stabilize from mid-2021, and average rates trend downward through 2024, likely combining real changes and enforcement/recording dynamics.</li>
 <li>Spatial<br>
-Violation rates show persistent within-city imbalance: hotspots repeatedly cluster in Chicago’s southwest corridor, while many north-side and lakefront areas remain relatively low. Relative-to-city maps place hotspots in similar locations, suggesting stable spatial concentration rather than random fluctuation.</li>
+Violation rates show persistent within-city imbalance: hotspots repeatedly cluster in Chicago’s southwest corridor, while north-side and lakefront areas remain relatively low. Relative-to-city maps place hotspots in similar locations, suggesting stable spatial concentration rather than random fluctuation.</li>
 </ul>
 </section>
 <section id="relationship-to-research-questions" class="level5">

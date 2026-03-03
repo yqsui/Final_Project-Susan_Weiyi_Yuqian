@@ -88,7 +88,7 @@ gdf.plot(
     legend=True,
     ax=axes[1]
 )
-axes[1].set_title("Structural Vulnerability Index")
+axes[1].set_title("Structural Feature Index")
 axes[1].axis("off")
 
 # Violation (log)
@@ -137,23 +137,27 @@ gdf["triple_hotspot"] = gdf["overlap_count"] == 3
 # Overlap Map
 fig, ax = plt.subplots(1, 1, figsize=(9, 9))
 
+gdf["overlap_score_cat"] = gdf["overlap_count"].astype("category")
+
 gdf.plot(
-    column="overlap_count",
+    column="overlap_score_cat",
     cmap="Reds",
-    linewidth=0.1,
+    linewidth=0.05,
     edgecolor="white",
     legend=True,
     ax=ax
 )
 
-# Triple Hotspo Map
-ax.set_title("Overlap of Top 25%: Econ + Structural + Violations (0–3)")
+ax.set_title(
+    "Cumulative Overlap of Top 25% Risk Factors\n(Economic + Structural + Violations)"
+)
 ax.axis("off")
 overlap_path = out_dir / "part2_overlap.png"
 fig.savefig(overlap_path, dpi=300, bbox_inches="tight")
 print(f"Overlap map saved to: {overlap_path}")
 plt.show()
 
+# Triple Hotspo Map
 fig, ax = plt.subplots(1, 1, figsize=(9, 9))
 
 gdf.plot(color="#eeeeee", linewidth=0.05, edgecolor="white", ax=ax)
