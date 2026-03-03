@@ -58,23 +58,22 @@ Housing Structural Index: poverty_z-index (share of population below poverty lin
 ## Static Visualization
 ### Spatial Distribution
 ![](../data/derived-data/part1_distribution.png)
-Economic pressure is higher in the southern and southwestern parts of Chicago, lower in northern and lakefront areas. Housing structural features exhibits an even stronger spatial concentration, clustering primarily in the south and southwest. The spatial pattern of building violations closely aligns with these high-risk areas, particularly with structural vulnerability.  
-Overall, violations are not randomly distributed but are concentrated in neighborhoods facing greater economic and structural stress.
-
-```{=latex}
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.35\textwidth,keepaspectratio]{../data/derived-data/part2_overlap.png}
-\hspace{0.02\textwidth}
-\includegraphics[width=0.30\textwidth,keepaspectratio]{../data/derived-data/part2_highlight.png}
-\end{figure}
-```
-These Triple-Burden Hotspots (left) highlight tracts that simultaneously rank in the top 25% for economic pressure, structural features, and violation rates. The hotspots are concentrated almost entirely in the southern and southwestern areas of the city. This suggests that the highest violation rates occur where multiple forms of neighborhood-level disadvantage overlap.  
-The right map highlights the areas with all three compounded risks. The clustering in the south reinforces the idea that housing violations are embedded in layered structural and economic inequality.  
+Violation rates are clearly spatially clustered, with higher values concentrated in the southern part of the city. Structural vulnerability exhibits a similar pattern of concentration, while economic pressure appears more spatially diffuse. This suggests that violations are more closely aligned with structural housing conditions than with economic pressure alone.
 
 ### Correlation Analysis
 ![](../data/derived-data/scatter_plot.png)  
 The plot indicates that housing structural vulnerability is a more consistent predictor of building violation rates than neighborhood economic pressure: left plot shows a weak positive linear trend between the Economic Pressure variable and average monthly building violation rate, while right plot shows a moderately stronger positive linear trend between the Housing Structural Feature and average monthly building violation rate.
+
+### Policy Extention
+```{=latex}
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.30\textwidth,keepaspectratio]{../data/derived-data/part2_overlap.png}
+\hspace{0.02\textwidth}
+\includegraphics[width=0.30\textwidth,keepaspectratio]{../data/derived-data/part2_highlight.png}
+\end{figure}
+```
+These map illustrates the number of risk dimensions in which each tract falls within the top 25 percent. The triple-burden hotspots where economic pressure, structural vulnerability, and violation rates overlap are geographically concentrated in the southern and southwestern parts of the city. It identifies neighborhoods where multiple housing risks co-occur and may require targeted policy attention.
 
 ## Streamlit
 ##### Distribution
