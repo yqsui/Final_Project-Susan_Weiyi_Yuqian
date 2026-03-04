@@ -34,19 +34,18 @@ How are housing violations distributed across neighborhoods in Chicago, and to w
 
 ## Data and Approach
 ### Data Resources
-The building violations dataset is sourced from the City of Chicago Data Portal, contains reported building violations with dates, descriptions & codes, and location information: `building_violations_raw`.
+The building violations data come from the City of Chicago Data Portal (`building_violations_raw`), including violation dates, codes/descriptions, and locations. 
+\
+Census tract–level measures come from the Census Bureau ACS 5-year release (Cook County, IL): `median_household_income.csv` and `rent_burden.csv` (economic pressure), and `poverty_status.csv`, `tenure_owner_renter.csv`, and `units_in_structure.csv` (housing structure).
 
-The following census resources are drawn from United States Census Bureau, American Community Survey Most recent 5-year release, Cook County, Illinois:  
-For economic pressure: `median_household_income_B19013.csv` and `rent_burden_B25070.csv`.  
-For housing structural features: `poverty_status_B17001.csv`, `tenure_owner_renter_B25003.csv`, and `units_in_structure_B25024.csv`.
 
 ### Data Progress
-1. Building Violations (City of Chicago)
-- Clean Data: Time window filtering, GEOID Standardization, quality checks, and tract-level structure
-- Violation Rate: We converted raw violation counts into a standardized rate per 1,000 units, using rate = 1,000 × (count / total units), which ensures that higher values indicate more violations relative to local building stock, enabling meaningful spatial and temporal comparisons.
-2. Census data for Economic Pressure and Housing Structural Features
-- Clean Data: GEOID standardization, column & label cleaning, variable selection (estimate only), and missing data handling
-- Standardization: Created Economic Pressure Index and Housing Structural Index with z-scores.
+1. Clean Data
+- Time window filtering, GEOID standardization, quality checks, build tract-level structure.
+2. Further processing
+- Created Violation Rate: converted raw violation counts into a rate per 1,000 units, equals to 1,000 × (count/total units), ensures that higher values indicate more violations relative to local building stock.
+\
+- Standardization: Created z-scores Indexes.
 Economic Pressure Index: rent_burden_z-index (share of households spending ≥30%) - income_z-index (direction reversa).
 Housing Structural Index: poverty_z-index (share of population below poverty line) + tenure_z-index (share of renter) + housing_age_z-index (share of units built in 1939 or earlier).
 
@@ -54,22 +53,25 @@ Housing Structural Index: poverty_z-index (share of population below poverty lin
 1. Relative rather than absolute measure: Because we use z-score standardization, the index captures relative differences within Cook County rather than absolute levels of housing pressure.
 2. Equal weighting assumption: By aggregating standardized variables, we implicitly assume equal contribution of each component, although their real-world impacts on housing pressure may differ.
 
-## Streamlit
-##### Distribution
-We developed an interactive Streamlit dashboard to explore the spatial distribution of housing violations across Chicago census tracts. The dashboard allows users to visualize violation rates, inspect tract-level information, and filter violations by category and time. It also includes a hotspot overlap tool that identifies tracts in the top percentile of economic pressure, structural vulnerability, and violation rates. These exploratory visualizations help identify spatial concentrations of risk and motivate the subsequent analysis of spatial patterns and overlapping housing risks.
-- Spatial  
-Violation rates show persistent within-city imbalance: hotspots repeatedly cluster in Chicago’s southwest corridor, while north-side and lakefront areas remain relatively low. Relative-to-city maps place hotspots in similar locations, suggesting stable spatial concentration rather than random fluctuation.
 
 ## Static Visualization
 ### Spatial Distribution
 ![](../data/derived-data/part1_distribution.png)
-Violation rates are clearly spatially clustered, with higher values concentrated in the southern part of the city. Structural vulnerability exhibits a similar pattern of concentration, while economic pressure appears more spatially diffuse. This suggests that violations are more closely aligned with structural housing conditions than with economic pressure alone.
+Violation rates are clearly spatially clustered, with higher values concentrated in the southern part of the city. Structural vulnerability exhibits a similar pattern of concentration, while economic pressure appears more spatially diffuse. 
 
 ### Correlation Analysis
 ![](../data/derived-data/scatter_plot.png)  
-The plot indicates that housing structural vulnerability is a more consistent predictor of building violation rates than neighborhood economic pressure: left plot shows a weak positive linear trend between the Economic Pressure variable and average monthly building violation rate, while right plot shows a moderately stronger positive linear trend between the Housing Structural Feature and average monthly building violation rate.
+The plot indicates that housing structural vulnerability is a more consistent predictor of building violation rates than neighborhood economic pressure: right plot shows a moderately stronger positive linear trend between the Housing Structural Feature and average monthly building violation rate.
 
-### Policy Extention
+
+## Streamlit
+##### Distribution
+We developed an interactive Streamlit dashboard to explore the distribution of housing violations across Chicago census tracts. The dashboard allows users to visualize violation rates, inspect tract-level information, and filter violations by category and time. It also includes a hotspot overlap tool that identifies tracts in the top percentile of economic pressure, structural vulnerability, and violation rates. 
+\
+Spatially, violation rates show persistent within-city imbalance: hotspots repeatedly cluster in Chicago’s southwest corridor, while north-side and lakefront areas remain relatively low.
+
+
+## Policy Extention
 ```{=latex}
 \begin{figure}[H]
 \centering
@@ -78,5 +80,5 @@ The plot indicates that housing structural vulnerability is a more consistent pr
 \includegraphics[width=0.30\textwidth,keepaspectratio]{../data/derived-data/part2_highlight.png}
 \end{figure}
 ```
-These map illustrates the number of risk dimensions in which each tract falls within the top 25 percent. The triple-burden hotspots where the three pressure overlap are geographically concentrated in southern and southwestern Chicago.  
-The results suggest that housing policy should prioritize targeted inspections and maintenance programs in these high-risk neighborhoods. Because structural vulnerability shows a stronger association with violations than economic pressure, interventions focused on improving building conditions such as proactive inspections and rehabilitation support may be particularly effective. By using spatial risk mapping to identify and prioritize hotspots, housing agencies can allocate limited enforcement and maintenance resources more efficiently.
+These overlapped maps illustrates the number of risk dimensions in which each tract falls within the top 25 percent. The triple-burden hotspots where the three pressure overlap are geographically concentrated in southern and southwestern Chicago.  
+The results suggest that housing policy should prioritize targeted inspections and maintenance programs in these high-risk neighborhoods. Because structural vulnerability shows a stronger association with violations, interventions focused on improving building conditions such as proactive inspections and rehabilitation support may be particularly effective. By using spatial risk mapping to identify and prioritize hotspots, housing agencies can allocate limited enforcement and maintenance resources more efficiently.
