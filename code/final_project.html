@@ -93,10 +93,7 @@ ul.task-list li input[type="checkbox"] {
 </section>
 <section id="research-question" class="level2">
 <h2 class="anchored" data-anchor-id="research-question">Research Question</h2>
-<ol type="1">
-<li>How do housing violations vary across time and neighborhoods?</li>
-<li>To what extent are these patterns associated with economic pressure and housing structural features?</li>
-</ol>
+<p>How are housing violations distributed across neighborhoods in Chicago, and to what extent can economic pressure and housing structural vulnerability explain these spatial patterns?</p>
 </section>
 <section id="data-and-approach" class="level2">
 <h2 class="anchored" data-anchor-id="data-and-approach">Data and Approach</h2>
@@ -136,16 +133,8 @@ For housing structural features: <code>poverty_status_B17001.csv</code>, <code>t
 <h2 class="anchored" data-anchor-id="streamlit">Streamlit</h2>
 <section id="distribution" class="level5">
 <h5 class="anchored" data-anchor-id="distribution">Distribution</h5>
-<ul>
-<li>Temporal<br>
-A clear break appears in March–April 2020, plausibly reflecting COVID-19 disruptions to inspections after the stay-at-home order. Patterns stabilize from mid-2021, and average rates trend downward through 2024, likely combining real changes and enforcement/recording dynamics.</li>
-<li>Spatial<br>
-Violation rates show persistent within-city imbalance: hotspots repeatedly cluster in Chicago’s southwest corridor, while north-side and lakefront areas remain relatively low. Relative-to-city maps place hotspots in similar locations, suggesting stable spatial concentration rather than random fluctuation.</li>
-</ul>
-</section>
-<section id="relationship-to-research-questions" class="level5">
-<h5 class="anchored" data-anchor-id="relationship-to-research-questions">Relationship to Research Questions</h5>
-<p>These patterns motivate two questions: Firstly, why do some tracts persistently exhibit higher violation intensity than others; Secondly, to what extent do tract-level economic pressure and structural vulnerability explain the location and persistence of hotspots.</p>
+<p>We developed an interactive Streamlit dashboard to explore the spatial distribution of housing violations across Chicago census tracts. The dashboard allows users to visualize violation rates, inspect tract-level information, and filter violations by category and time. It also includes a hotspot overlap tool that identifies tracts in the top percentile of economic pressure, structural vulnerability, and violation rates. These exploratory visualizations help identify spatial concentrations of risk and motivate the subsequent analysis of spatial patterns and overlapping housing risks. - Spatial<br>
+Violation rates show persistent within-city imbalance: hotspots repeatedly cluster in Chicago’s southwest corridor, while north-side and lakefront areas remain relatively low. Relative-to-city maps place hotspots in similar locations, suggesting stable spatial concentration rather than random fluctuation.</p>
 </section>
 </section>
 <section id="static-visualization" class="level2">
