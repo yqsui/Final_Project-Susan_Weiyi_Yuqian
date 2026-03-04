@@ -55,6 +55,16 @@ Housing Structural Index: poverty_z-index (share of population below poverty lin
 1. Relative rather than absolute measure: Because we use z-score standardization, the index captures relative differences within Cook County rather than absolute levels of housing pressure.
 2. Equal weighting assumption: By aggregating standardized variables, we implicitly assume equal contribution of each component, although their real-world impacts on housing pressure may differ.
 
+## Streamlit
+##### Distribution
+- Temporal  
+A clear break appears in March–April 2020, plausibly reflecting COVID-19 disruptions to inspections after the stay-at-home order. Patterns stabilize from mid-2021, and average rates trend downward through 2024, likely combining real changes and enforcement/recording dynamics.
+- Spatial  
+Violation rates show persistent within-city imbalance: hotspots repeatedly cluster in Chicago’s southwest corridor, while north-side and lakefront areas remain relatively low. Relative-to-city maps place hotspots in similar locations, suggesting stable spatial concentration rather than random fluctuation.
+
+##### Relationship to Research Questions
+These patterns motivate two questions: Firstly, why do some tracts persistently exhibit higher violation intensity than others; Secondly, to what extent do tract-level economic pressure and structural vulnerability explain the location and persistence of hotspots.
+
 ## Static Visualization
 ### Spatial Distribution
 ![](../data/derived-data/part1_distribution.png)
@@ -73,14 +83,5 @@ The plot indicates that housing structural vulnerability is a more consistent pr
 \includegraphics[width=0.30\textwidth,keepaspectratio]{../data/derived-data/part2_highlight.png}
 \end{figure}
 ```
-These map illustrates the number of risk dimensions in which each tract falls within the top 25 percent. The triple-burden hotspots where economic pressure, structural vulnerability, and violation rates overlap are geographically concentrated in the southern and southwestern parts of the city. It identifies neighborhoods where multiple housing risks co-occur and may require targeted policy attention.
-
-## Streamlit
-##### Distribution
-- Temporal  
-A clear break appears in March–April 2020, plausibly reflecting COVID-19 disruptions to inspections after the stay-at-home order. Patterns stabilize from mid-2021, and average rates trend downward through 2024, likely combining real changes and enforcement/recording dynamics.
-- Spatial  
-Violation rates show persistent within-city imbalance: hotspots repeatedly cluster in Chicago’s southwest corridor, while north-side and lakefront areas remain relatively low. Relative-to-city maps place hotspots in similar locations, suggesting stable spatial concentration rather than random fluctuation.
-
-##### Relationship to Research Questions
-These patterns motivate two questions: Firstly, why do some tracts persistently exhibit higher violation intensity than others; Secondly, to what extent do tract-level economic pressure and structural vulnerability explain the location and persistence of hotspots.
+These map illustrates the number of risk dimensions in which each tract falls within the top 25 percent. The triple-burden hotspots where the three pressure overlap are geographically concentrated in southern and southwestern Chicago.  
+The results suggest that housing policy should prioritize targeted inspections and maintenance programs in these high-risk neighborhoods. Because structural vulnerability shows a stronger association with violations than economic pressure, interventions focused on improving building conditions such as proactive inspections and rehabilitation support may be particularly effective. By using spatial risk mapping to identify and prioritize hotspots, housing agencies can allocate limited enforcement and maintenance resources more efficiently.

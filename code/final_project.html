@@ -54,13 +54,13 @@ ul.task-list li input[type="checkbox"] {
   <li><a href="#data-progress" id="toc-data-progress" class="nav-link" data-scroll-target="#data-progress">Data Progress</a></li>
   <li><a href="#weakness-and-difficulties" id="toc-weakness-and-difficulties" class="nav-link" data-scroll-target="#weakness-and-difficulties">Weakness and Difficulties</a></li>
   </ul></li>
+  <li><a href="#streamlit" id="toc-streamlit" class="nav-link" data-scroll-target="#streamlit">Streamlit</a></li>
   <li><a href="#static-visualization" id="toc-static-visualization" class="nav-link" data-scroll-target="#static-visualization">Static Visualization</a>
   <ul class="collapse">
   <li><a href="#spatial-distribution" id="toc-spatial-distribution" class="nav-link" data-scroll-target="#spatial-distribution">Spatial Distribution</a></li>
   <li><a href="#correlation-analysis" id="toc-correlation-analysis" class="nav-link" data-scroll-target="#correlation-analysis">Correlation Analysis</a></li>
   <li><a href="#policy-extention" id="toc-policy-extention" class="nav-link" data-scroll-target="#policy-extention">Policy Extention</a></li>
   </ul></li>
-  <li><a href="#streamlit" id="toc-streamlit" class="nav-link" data-scroll-target="#streamlit">Streamlit</a></li>
   </ul>
 <div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="../final_project.pdf"><i class="bi bi-file-pdf"></i>PDF</a></li></ul></div></nav>
 </div>
@@ -132,22 +132,6 @@ For housing structural features: <code>poverty_status_B17001.csv</code>, <code>t
 </ol>
 </section>
 </section>
-<section id="static-visualization" class="level2">
-<h2 class="anchored" data-anchor-id="static-visualization">Static Visualization</h2>
-<section id="spatial-distribution" class="level3">
-<h3 class="anchored" data-anchor-id="spatial-distribution">Spatial Distribution</h3>
-<p><img src="../data/derived-data/part1_distribution.png" class="img-fluid"> Violation rates are clearly spatially clustered, with higher values concentrated in the southern part of the city. Structural vulnerability exhibits a similar pattern of concentration, while economic pressure appears more spatially diffuse. This suggests that violations are more closely aligned with structural housing conditions than with economic pressure alone.</p>
-</section>
-<section id="correlation-analysis" class="level3">
-<h3 class="anchored" data-anchor-id="correlation-analysis">Correlation Analysis</h3>
-<p><img src="../data/derived-data/scatter_plot.png" class="img-fluid"><br>
-The plot indicates that housing structural vulnerability is a more consistent predictor of building violation rates than neighborhood economic pressure: left plot shows a weak positive linear trend between the Economic Pressure variable and average monthly building violation rate, while right plot shows a moderately stronger positive linear trend between the Housing Structural Feature and average monthly building violation rate.</p>
-</section>
-<section id="policy-extention" class="level3">
-<h3 class="anchored" data-anchor-id="policy-extention">Policy Extention</h3>
-<p>These map illustrates the number of risk dimensions in which each tract falls within the top 25 percent. The triple-burden hotspots where economic pressure, structural vulnerability, and violation rates overlap are geographically concentrated in the southern and southwestern parts of the city. It identifies neighborhoods where multiple housing risks co-occur and may require targeted policy attention.</p>
-</section>
-</section>
 <section id="streamlit" class="level2">
 <h2 class="anchored" data-anchor-id="streamlit">Streamlit</h2>
 <section id="distribution" class="level5">
@@ -162,6 +146,23 @@ Violation rates show persistent within-city imbalance: hotspots repeatedly clust
 <section id="relationship-to-research-questions" class="level5">
 <h5 class="anchored" data-anchor-id="relationship-to-research-questions">Relationship to Research Questions</h5>
 <p>These patterns motivate two questions: Firstly, why do some tracts persistently exhibit higher violation intensity than others; Secondly, to what extent do tract-level economic pressure and structural vulnerability explain the location and persistence of hotspots.</p>
+</section>
+</section>
+<section id="static-visualization" class="level2">
+<h2 class="anchored" data-anchor-id="static-visualization">Static Visualization</h2>
+<section id="spatial-distribution" class="level3">
+<h3 class="anchored" data-anchor-id="spatial-distribution">Spatial Distribution</h3>
+<p><img src="../data/derived-data/part1_distribution.png" class="img-fluid"> Violation rates are clearly spatially clustered, with higher values concentrated in the southern part of the city. Structural vulnerability exhibits a similar pattern of concentration, while economic pressure appears more spatially diffuse. This suggests that violations are more closely aligned with structural housing conditions than with economic pressure alone.</p>
+</section>
+<section id="correlation-analysis" class="level3">
+<h3 class="anchored" data-anchor-id="correlation-analysis">Correlation Analysis</h3>
+<p><img src="../data/derived-data/scatter_plot.png" class="img-fluid"><br>
+The plot indicates that housing structural vulnerability is a more consistent predictor of building violation rates than neighborhood economic pressure: left plot shows a weak positive linear trend between the Economic Pressure variable and average monthly building violation rate, while right plot shows a moderately stronger positive linear trend between the Housing Structural Feature and average monthly building violation rate.</p>
+</section>
+<section id="policy-extention" class="level3">
+<h3 class="anchored" data-anchor-id="policy-extention">Policy Extention</h3>
+<p>These map illustrates the number of risk dimensions in which each tract falls within the top 25 percent. The triple-burden hotspots where the three pressure overlap are geographically concentrated in southern and southwestern Chicago.<br>
+The results suggest that housing policy should prioritize targeted inspections and maintenance programs in these high-risk neighborhoods. Because structural vulnerability shows a stronger association with violations than economic pressure, interventions focused on improving building conditions such as proactive inspections and rehabilitation support may be particularly effective. By using spatial risk mapping to identify and prioritize hotspots, housing agencies can allocate limited enforcement and maintenance resources more efficiently.</p>
 </section>
 </section>
 
