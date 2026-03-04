@@ -35,6 +35,12 @@ code/
   plot_maps.py                          # Geographic distribution and overlap of economic and structural pressure, and violation intensity
   plot_scatter.py                       # Draw scatter plot
   app.py                                # Create Streamlit app
+  final_project.qmd                     # final project of qmd file (with code)
+  final_project.pdf                     # final project of pdf file
+  final_project.html                    # final project of html file
+  writeup.qmd                           # final writeup of qmd file (only text)
+  writeup.pdf                           # final writeup of pdf file
+  writeup.html                          # final writeup of html file
 ```
 
 ## Usage
@@ -66,5 +72,5 @@ After downloading, save it to this exact path (do not rename):
 - `data/raw-data/building_violations_raw.csv`
 
 ## Streamlit Link
-- https://finalproject-susanweiyiyuqian-h5doxuwqc6xyifknukjwu2.streamlit.app/
+- https://finalproject-susanweiyiyuqian-lq3bmd7kuccd7dhsba9gcz.streamlit.app/
 - Here is the link to Streamlit Community Cloud Dashboard.

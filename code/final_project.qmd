@@ -29,25 +29,556 @@ Section4 -- PPHA 30538
 **Group Members:**
 Susan Zhang (GitHub: SusanYaranZhang, Section 4); Weiyi Wang (GitHub: weiyiwang-611, Section 4); Yuqian Sui (GitHub: yqsui, Section 4)
 
+
 ## Research Question
 How are housing violations distributed across neighborhoods in Chicago, and to what extent can economic pressure and housing structural vulnerability explain these spatial patterns?
 
+
 ## Data and Approach
 ### Data Resources
-The building violations data come from the City of Chicago Data Portal (`building_violations_raw`), including violation dates, codes/descriptions, and locations. 
-\
+The building violations data come from the City of Chicago Data Portal (`building_violations_raw`), including violation dates, codes/descriptions, and locations.  
 Census tract–level measures come from the Census Bureau ACS 5-year release (Cook County, IL): `median_household_income.csv` and `rent_burden.csv` (economic pressure), and `poverty_status.csv`, `tenure_owner_renter.csv`, and `units_in_structure.csv` (housing structure).
 
-
 ### Data Progress
-1. Clean Data
-- Time window filtering, GEOID standardization, quality checks, build tract-level structure.
+1. Clean Data: Time window filtering, GEOID standardization, quality checks, build tract-level structure.
+```{python}
+#| output: false
+#| echo: true 
+import geopandas as gpd
+import pandas as pd
+import numpy as np
+from pathlib import Path
+from shapely import wkt
+
+### Path
+script_dir = Path(".").parent
+
+raw_dir = script_dir / "../data/raw-data"
+out_dir = script_dir / "../data/derived-data"
+out_dir.mkdir(parents=True, exist_ok=True)
+
+### Load Data
+rent_burden_path = raw_dir / "rent_burden_B25070.csv"
+median_income_path = raw_dir / "median_household_income_B19013.csv"
+poverty_status_path = raw_dir / ("poverty_status_B17001.csv")
+tenure_owner_renter_path = raw_dir / ("tenure_owner_renter_B25003.csv")
+units_in_structure_path = raw_dir / ("units_in_structure_B25024.csv")
+
+### Standard Functions
+# Split label with data
+def split_label_and_data(df: pd.DataFrame):
+    labels = df.iloc[0].copy()
+    data = df.iloc[1:].copy().reset_index(drop=True)
+    return labels, data
+
+# Clean GEOID
+def add_clean_geoid(df: pd.DataFrame, geo_col: str = "GEO_ID") -> pd.DataFrame:
+    df[geo_col] = (
+        df[geo_col]
+        .astype(str)
+        .str.strip()
+        .str[-11:]
+    )
+    df = df.rename(columns={geo_col: "GEOID"})
+    
+    return df
+
+# Change to numerics
+def convert_numeric_except_geoid(df: pd.DataFrame) -> pd.DataFrame:
+    numeric_cols = [c for c in df.columns if c != "GEOID"]
+    df[numeric_cols] = df[numeric_cols].apply(
+        pd.to_numeric, errors="coerce"
+    )
+    return df
+
+# Standardize a series to z-scores
+def zscore(s: pd.Series) -> pd.Series:
+    return (s - s.mean()) / s.std(ddof=0)
+```
+
 2. Further Processing
-- Created Violation Rate: converted raw violation counts into a rate per 1,000 units, equals to 1,000 × (count/total units), ensures that higher values indicate more violations relative to local building stock.
-\
-- Standardization: Created z-scores Indexes.
-Economic Pressure Index: rent_burden_z-index (share of households spending ≥30%) - income_z-index (direction reversa).
-Housing Structural Index: poverty_z-index (share of population below poverty line) + tenure_z-index (share of renter) + housing_age_z-index (share of units built in 1939 or earlier).
+i. Created Violation Rate: converted raw violation counts into a rate per 1,000 units, equals to 1,000 × (count/total units), ensures that higher values indicate more violations relative to local building stock.
+```{python}
+#| output: false
+#| echo: true 
+### Building violation
+# Read building_violations_raw
+violations_path=raw_dir/'building_violations_raw.csv'
+violations=pd.read_csv(violations_path)
+violations['VIOLATION DATE']=pd.to_datetime(violations['VIOLATION DATE'],errors='coerce')
+violations['YEAR_MONTH']=violations['VIOLATION DATE'].dt.to_period('M')
+violations.head()
+
+violations['LATITUDE']=pd.to_numeric(violations['LATITUDE'],errors='coerce')
+violations['LONGITUDE']=pd.to_numeric(violations['LONGITUDE'],errors='coerce')
+violations=violations.dropna(subset=['LATITUDE','LONGITUDE']).copy()
+
+
+# CRS
+viol_gdf=gpd.GeoDataFrame(
+    violations,
+    geometry=gpd.points_from_xy(violations['LONGITUDE'],violations['LATITUDE']),
+    crs='EPSG:4326'
+)
+
+print("CRS:",viol_gdf.crs)
+print("Geometry type:",viol_gdf.geometry.geom_type.value_counts().to_dict())
+print("Rows:",viol_gdf.shape[0])
+
+viol_gdf[['ID','LATITUDE','LONGITUDE','geometry']].head()
+
+
+# Read tracts
+tract_path=raw_dir/'tl_2024_17_tract.shp'
+tracts=gpd.read_file(tract_path)
+print("Tracts CRS:",tracts.crs)
+print("Tracts columns:",list(tracts.columns))
+tracts=tracts[['GEOID','geometry']].copy()
+
+
+# Spatial join
+print("viol_gdf CRS:",viol_gdf.crs)
+print("tracts CRS:",tracts.crs)
+
+if viol_gdf.crs!=tracts.crs:
+    viol_gdf=viol_gdf.to_crs(tracts.crs)
+print("viol_gdf CRS (after):", viol_gdf.crs)
+
+viol_with_tract=gpd.sjoin(
+    viol_gdf,
+    tracts,
+    how='left',
+    predicate='intersects'
+)
+
+
+# Check whether sjoin created one-to-many matches
+print("violations before:",viol_gdf.shape[0])
+print("rows after join:",viol_with_tract.shape[0])
+print("unmatched points:",viol_with_tract["GEOID"].isna().sum())
+print("unique GEOID matched:",viol_with_tract["GEOID"].nunique())
+
+
+# Keep a minimal detail table with code and description 
+detail_cols=[
+    "ID",
+    "GEOID",
+    "VIOLATION DATE",
+    "YEAR_MONTH",
+    "VIOLATION CODE",
+    "VIOLATION DESCRIPTION",
+]
+viol_detail=viol_with_tract[detail_cols].copy()
+viol_detail=viol_detail.dropna(subset=["GEOID"]).copy()
+
+viol_detail["YEAR_MONTH_STR"]=viol_detail["YEAR_MONTH"].astype(str)
+viol_detail["YEAR_MONTH_DT"]=viol_detail["YEAR_MONTH"].dt.to_timestamp()
+
+
+# Create tract*month aggregation (for Streamlit dynamic map)
+tract_month=(viol_with_tract
+             .dropna(subset=["GEOID"])
+             .groupby(["GEOID","YEAR_MONTH"],as_index=False)
+             .size())
+tract_month=tract_month.rename(columns={'size':'VIOLATION_COUNT'})
+
+tract_month['YEAR_MONTH_STR']=tract_month['YEAR_MONTH'].astype(str)
+tract_month['YEAR_MONTH_DT']=tract_month['YEAR_MONTH'].dt.to_timestamp()
+tract_month.head()
+
+
+# Aggregate building violations to tract×month×violation_code counts 
+tract_month_code=(viol_with_tract
+                  .dropna(subset=["GEOID"])
+                  .groupby(["GEOID","YEAR_MONTH","VIOLATION CODE"],as_index=False)
+                  .size()
+                  .rename(columns={"size":"VIOLATION_COUNT"}))
+
+tract_month_code["YEAR_MONTH_STR"]=tract_month_code["YEAR_MONTH"].astype(str)
+tract_month_code["YEAR_MONTH_DT"]=tract_month_code["YEAR_MONTH"].dt.to_timestamp()
+
+
+# Build a code -> description mapping
+code_desc=(viol_with_tract
+           .dropna(subset=["VIOLATION CODE","VIOLATION DESCRIPTION"])
+           .groupby("VIOLATION CODE")["VIOLATION DESCRIPTION"]
+           .agg(lambda s:s.value_counts().idxmax())
+           .reset_index()
+           .rename(columns={"VIOLATION DESCRIPTION":"VIOLATION_DESCRIPTION"}))
+
+
+# Merge description into the aggregated table
+tract_month_code=tract_month_code.merge(code_desc,on="VIOLATION CODE",how="left")
+out_path_code=out_dir/"building_violation_by_code.csv"
+tract_month_code.to_csv(out_path_code,index=False)
+```
+
+ii. Standardization: Created z-scores Indexes.
+- Economic Pressure Index: rent_burden_z-index (share of households spending ≥30%) - income_z-index (direction reversa).  
+```{python}
+#| output: false
+#| echo: true 
+### Economic Pressure 1: Rent Burden
+rent_burden = pd.read_csv(rent_burden_path)
+labels, rent_burden = split_label_and_data(rent_burden)
+rent_burden = add_clean_geoid(rent_burden)
+
+print(rent_burden.columns)
+print("B25070_001E label =", labels["B25070_001E"])
+
+rename_rent_burden = {
+    col: str(labels[col]).replace("Estimate", "").replace("Total:", "").strip()
+    for col in labels.index
+    if col in rent_burden.columns
+}
+
+rent_burden = rent_burden.rename(columns=rename_rent_burden)
+rent_burden = rent_burden.loc[
+    :, ~rent_burden.columns.str.startswith("M")
+]
+rent_burden = rent_burden.dropna(axis=1, how="all")
+rent_burden.columns = rent_burden.columns.str.replace(r"^!+", "", regex=True)
+rent_burden = rent_burden.rename(
+    columns={rent_burden.columns[2]: "total"}
+)
+rent_burden = rent_burden.drop(rent_burden.columns[1], axis=1)
+rent_burden["GEOID"] = rent_burden["GEOID"].str[-11:]
+rent_burden
+
+# Standarize
+rent_burden = convert_numeric_except_geoid(rent_burden)
+
+rent_burden["rb_30plus_share"] = (
+    rent_burden["30.0 to 34.9 percent"]
+    + rent_burden["35.0 to 39.9 percent"]
+    + rent_burden["40.0 to 49.9 percent"]
+    + rent_burden["50.0 percent or more"]
+)
+
+rent_burden["rb_30plus_z"] = zscore(
+    rent_burden["rb_30plus_share"]
+)
+
+print(rent_burden["rb_30plus_z"].describe()) #check if correctly standarized
+
+### Economic Pressure 2: Median Income
+median_income = pd.read_csv(median_income_path)
+labels, median_income = split_label_and_data(median_income)
+median_income = add_clean_geoid(median_income)
+
+rename_median_income = {
+    col: str(labels[col]).replace("Estimate", "").replace("Total:", "").strip()
+    for col in labels.index
+    if col in median_income.columns
+}
+
+median_income = median_income.rename(columns=rename_median_income)
+median_income = median_income.loc[
+    :, ~median_income.columns.str.startswith("M")
+]
+median_income = median_income.dropna(axis=1, how="all")
+median_income.columns = median_income.columns.str.replace(r"^!+", "", regex=True)
+median_income = median_income.rename(
+    columns={median_income.columns[2]: "median_income_usd"}
+)
+median_income = median_income.drop(median_income.columns[1], axis=1)
+median_income["GEOID"] = median_income["GEOID"].str[-11:]
+
+# Standarize
+median_income = convert_numeric_except_geoid(median_income)
+
+median_income["income_z"] = zscore(median_income["median_income_usd"])
+
+median_income["income_z_rev"] = -median_income["income_z"]
+
+print(median_income[["median_income_usd", "income_z", "income_z_rev"]].describe())
+print("NaN income rows:", median_income["median_income_usd"].isna().sum())
+
+
+### Merge into a "Economic Pressure" DataFrame
+economic_df = rent_burden.merge(
+    median_income[["GEOID", "median_income_usd", "income_z_rev"]],
+    on="GEOID",
+    how="left",
+    indicator=True
+)
+
+print(economic_df["_merge"].value_counts())
+
+# Check no income and NaN
+no_income = economic_df[
+    economic_df["median_income_usd"].isna()
+]
+print("Number of tracts with missing income:", len(no_income))
+print(no_income[["GEOID", "median_income_usd"]].head(20))
+nan_key = economic_df[
+    economic_df[["rb_30plus_z", "income_z_rev"]].isna().any(axis=1)
+]
+
+print("Rows with NaN in key vars:", len(nan_key))
+print(nan_key[["GEOID", "rb_30plus_z", "income_z_rev"]].head(20))
+
+# Clean economic_df
+economic_df_clean = economic_df.dropna(
+    subset=["rb_30plus_z", "income_z_rev"]
+)
+
+print("Before drop:", len(economic_df_clean))
+print("After drop:", len(economic_df_clean))
+
+# Final economic pressure index
+economic_df_clean["economic_pressure_index"] = (
+    economic_df_clean["rb_30plus_z"]
+    + economic_df_clean["income_z_rev"]
+)
+
+print(economic_df_clean["economic_pressure_index"].describe())
+
+economic_df_final = economic_df_clean[
+    [
+        "GEOID",
+        "rb_30plus_z",
+        "income_z_rev",
+        "economic_pressure_index"
+    ]
+].copy()
+
+print(economic_df_final.head())
+print("Final rows:", len(economic_df_final))
+print("Final columns:", economic_df_final.columns.tolist())
+
+# Save as cvs
+output_path = out_dir / "economic_pressure.csv"
+economic_df_final.to_csv(output_path, index=False)
+```
+
+- Housing Structural Index: poverty_z-index (share of population below poverty line in the community) + tenure_z-index (share of renters among all households) + housing_age_z-index (share of units built in 1939 or earlier).  
+*(Here, tenure is measured as the percentage of renter-occupied units in each census tract, rather than tenancy term. Higher renter-occupied share is expected to correlate with higher building violation rates since: Landlords may have weaker incentives for regular maintenance of rental properties compared to owner-occupied homes; Short-term rental tenancy reduces tenants' motivation to report minor violations before they escalate, leading to accumulated housing code violations.)*
+```{python}
+#| output: false
+#| echo: true 
+### Housing Structural Features 1: Poverty Rate
+poverty_status = pd.read_csv(poverty_status_path)
+labels, poverty_status = split_label_and_data(poverty_status)
+poverty_status = add_clean_geoid(poverty_status)
+
+poverty_status.rename(
+    columns={
+        "B17001_001E": "total_population",
+        "B17001_002E": "poverty_population"
+    },
+    inplace=True
+)
+
+rename_poverty_status = {
+    col: str(labels[col]).replace("Estimate", "").replace("Total:", "").strip()
+    for col in labels.index
+    if col in poverty_status.columns
+}
+poverty_status = poverty_status.rename(columns=rename_poverty_status)
+
+poverty_status = poverty_status.loc[
+    :, ~poverty_status.columns.str.startswith("M")
+]
+poverty_status = poverty_status.dropna(axis=1, how="all")
+poverty_status.columns = poverty_status.columns.str.replace(r"^!+", "", regex=True)
+
+core_cols = ["GEOID", "total_population", "poverty_population"]
+poverty_status = poverty_status[core_cols].copy()
+
+poverty_status = convert_numeric_except_geoid(poverty_status)
+
+poverty_status = poverty_status[
+    (poverty_status["total_population"] > 0) &
+    (poverty_status["total_population"].notna()) &
+    (poverty_status["poverty_population"].notna())
+].reset_index(drop=True)
+
+poverty_status["poverty_rate"] = round(
+    (poverty_status["poverty_population"] / poverty_status["total_population"]) * 100, 2
+)
+poverty_status["poverty_rate_z"] = zscore(poverty_status["poverty_rate"])
+poverty_df = poverty_status[["GEOID", "poverty_rate", "poverty_rate_z"]].copy()
+
+### Housing Structural Features 2: Tenure Owner Renter
+tenure_owner_renter = pd.read_csv(tenure_owner_renter_path)
+labels, tenure_owner_renter = split_label_and_data(tenure_owner_renter)
+tenure_owner_renter = add_clean_geoid(tenure_owner_renter)
+
+tenure_owner_renter.rename(
+    columns={
+        "B25003_001E": "total_housing",
+        "B25003_002E": "owner_occupied",
+        "B25003_003E": "renter_occupied"
+    },
+    inplace=True
+)
+
+rename_tenure_owner_renter = {
+    col: str(labels[col]).replace("Estimate", "").replace("Total:", "").strip()
+    for col in labels.index
+    if col in tenure_owner_renter.columns
+}
+tenure_owner_renter = tenure_owner_renter.rename(columns=rename_tenure_owner_renter)
+
+tenure_owner_renter = tenure_owner_renter.loc[
+    :, ~tenure_owner_renter.columns.str.startswith("M")
+]
+tenure_owner_renter = tenure_owner_renter.dropna(axis=1, how="all")
+tenure_owner_renter.columns = tenure_owner_renter.columns.str.replace(r"^!+", "", regex=True)
+
+core_cols = ["GEOID", "total_housing", "owner_occupied", "renter_occupied"]
+tenure_owner_renter = tenure_owner_renter[core_cols].copy()
+
+tenure_owner_renter = convert_numeric_except_geoid(tenure_owner_renter)
+
+tenure_owner_renter = tenure_owner_renter[
+    (tenure_owner_renter["total_housing"] > 0) &
+    (tenure_owner_renter["total_housing"].notna()) &
+    (tenure_owner_renter["owner_occupied"].notna()) &
+    (tenure_owner_renter["renter_occupied"].notna())
+].reset_index(drop=True)
+
+tenure_owner_renter["renter_rate"] = round(
+    (tenure_owner_renter["renter_occupied"] / tenure_owner_renter["total_housing"]) * 100, 2
+)
+tenure_owner_renter["renter_rate_z"] = zscore(tenure_owner_renter["renter_rate"])
+tenure_df = tenure_owner_renter[["GEOID", "renter_rate", "renter_rate_z"]].copy()
+
+### Housing Structural Features 3: Units in Structure
+units_in_structure = pd.read_csv(units_in_structure_path)
+labels, units_in_structure = split_label_and_data(units_in_structure)
+units_in_structure = add_clean_geoid(units_in_structure)
+
+units_in_structure.rename(
+    columns={
+        "B25034_001E": "total_buildings",
+        "B25034_002E": "built_2020_later",
+        "B25034_003E": "built_2010_2019",
+        "B25034_004E": "built_2000_2009",
+        "B25034_005E": "built_1990_1999",
+        "B25034_006E": "built_1980_1989",
+        "B25034_007E": "built_1970_1979",
+        "B25034_008E": "built_1960_1969",
+        "B25034_009E": "built_1950_1959",
+        "B25034_010E": "built_1940_1949",
+        "B25034_011E": "built_1939_earlier"
+    },
+    inplace=True
+)
+
+rename_units_in_structure = {
+    col: str(labels[col]).replace("Estimate", "").replace("Total:", "").strip()
+    for col in labels.index
+    if col in units_in_structure.columns
+}
+units_in_structure = units_in_structure.rename(columns=rename_units_in_structure)
+
+units_in_structure = units_in_structure.loc[
+    :, ~units_in_structure.columns.str.startswith("M")
+]
+units_in_structure = units_in_structure.dropna(axis=1, how="all")
+units_in_structure.columns = units_in_structure.columns.str.replace(r"^!+", "", regex=True)
+
+core_cols = [
+    "GEOID", "total_buildings", 
+    "built_2020_later", "built_2010_2019", "built_2000_2009", "built_1990_1999",
+    "built_1980_1989", "built_1970_1979", "built_1960_1969", "built_1950_1959",
+    "built_1940_1949", "built_1939_earlier"
+]
+units_in_structure = units_in_structure[core_cols].copy()
+
+units_in_structure = convert_numeric_except_geoid(units_in_structure)
+
+units_in_structure = units_in_structure[
+    (units_in_structure["total_buildings"] > 0) &
+    (units_in_structure["total_buildings"].notna())
+].reset_index(drop=True)
+
+units_in_structure["old_building_rate"] = round(
+    (units_in_structure["built_1939_earlier"] / units_in_structure["total_buildings"]) * 100, 2
+)
+units_in_structure
+units_in_structure["old_building_rate_z"] = zscore(units_in_structure["old_building_rate"])
+building_df = units_in_structure[["GEOID", "total_buildings", "old_building_rate", "old_building_rate_z"]].copy()
+
+
+### Merge into a "Housing Structural Features" DataFrame
+housing_df = poverty_df.merge(
+    tenure_df[["GEOID", "renter_rate", "renter_rate_z"]],
+    on="GEOID",
+    how="left",
+    indicator="merge_tenure"
+)
+
+housing_df = housing_df.merge(
+    building_df[["GEOID", "total_buildings", "old_building_rate", "old_building_rate_z"]],
+    on="GEOID",
+    how="left",
+    indicator="merge_building"
+)
+
+print("Merge tenure result:")
+print(housing_df["merge_tenure"].value_counts())
+print("\nMerge building result:")
+print(housing_df["merge_building"].value_counts())
+
+# Check no tenure, no building and NaN
+no_tenure = housing_df[housing_df["renter_rate"].isna()]
+print(f"\nTracts with missing tenure data: {len(no_tenure)}")
+print(no_tenure[["GEOID", "renter_rate"]].head(10))
+
+no_building = housing_df[housing_df["old_building_rate"].isna()]
+print(f"\nTracts with missing building data: {len(no_building)}")
+print(no_building[["GEOID", "old_building_rate"]].head(10))
+
+nan_key = housing_df[
+    housing_df[["poverty_rate_z", "renter_rate_z", "old_building_rate_z"]].isna().any(axis=1)
+]
+print(f"\nRows with NaN in key vars: {len(nan_key)}")
+print(nan_key[["GEOID", "poverty_rate_z", "renter_rate_z", "old_building_rate_z"]].head(10))
+
+# Clean housing_df
+housing_df_clean = housing_df.dropna(
+    subset=["total_buildings", "poverty_rate_z", "renter_rate_z", "old_building_rate_z"]
+)
+
+print(f"\nBefore drop NaN: {len(housing_df)}")
+print(f"After drop NaN: {len(housing_df_clean)}")
+
+# Final housing structural index
+housing_df_clean["housing_structural_index"] = (
+    housing_df_clean["poverty_rate_z"] + 
+    housing_df_clean["renter_rate_z"] + 
+    housing_df_clean["old_building_rate_z"]
+)
+
+print("\nHousing Structural Index stats:")
+print(housing_df_clean["housing_structural_index"].describe())
+
+housing_df_final = housing_df_clean[
+    [
+        "GEOID",
+        "total_buildings",
+        "poverty_rate",
+        "poverty_rate_z",
+        "renter_rate",
+        "renter_rate_z",
+        "old_building_rate",
+        "old_building_rate_z",
+        "housing_structural_index"
+    ]
+].copy()
+
+print("\nFinal Housing Structural Features DataFrame:")
+print(housing_df_final.head(10))
+print(f"Final rows: {len(housing_df_final)}")
+print(f"Final columns: {housing_df_final.columns.tolist()}")
+
+# Save as csv
+output_path = out_dir / "housing_structural_features.csv"
+housing_df_final.to_csv(output_path, index=False, encoding="utf-8")
+```
 
 ### Weakness and Difficulties
 1. Relative rather than absolute measure: Because we use z-score standardization, the index captures relative differences within Cook County rather than absolute levels of housing pressure.
@@ -56,29 +587,752 @@ Housing Structural Index: poverty_z-index (share of population below poverty lin
 
 ## Static Visualization
 ### Spatial Distribution
+```{python}
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+from pathlib import Path
+import geopandas as gpd
+import numpy as np
+
+### Path
+script_dir = Path(".").parent
+
+raw_dir = script_dir / "../data/raw-data"
+out_dir = script_dir / "../data/derived-data"
+out_dir.mkdir(parents=True, exist_ok=True)
+
+### Load data
+violation_path = out_dir / "building_violation_by_code_rate.csv"
+economic_path = out_dir / "economic_pressure.csv"
+housing_path = out_dir / "housing_structural_features.csv"
+
+violation = pd.read_csv(violation_path)
+economic = pd.read_csv(economic_path)
+housing = pd.read_csv(housing_path)
+
+# Sum up by GEOID+YEAR_MONTH (the total violation rate for the same area and the same month)
+violation_month_sum = violation.groupby(["GEOID", "YEAR_MONTH"])["VIOL_PER_1000_BUILDINGS"].sum().reset_index()
+violation_month_sum.rename(columns={"VIOL_PER_1000_BUILDINGS": "monthly_total_violation_rate"}, inplace=True)
+violation_month_sum.head()
+
+# Calculate the average by GEOID (the average monthly total violation rate for all months in the same area)
+violation_agg = violation_month_sum.groupby("GEOID")["monthly_total_violation_rate"].mean().reset_index()
+violation_agg.rename(columns={"monthly_total_violation_rate": "avg_monthly_total_violation_rate"}, inplace=True)
+violation_agg.head()
+
+# Merge
+economic_needed = economic[["GEOID", "economic_pressure_index"]]
+housing_needed = housing[["GEOID", "housing_structural_index"]]
+
+merged = violation_agg.merge(economic_needed, on="GEOID", how="inner")
+merged = merged.merge(housing_needed, on="GEOID", how="inner")
+
+print(f"Number of valid data rows after merging: {len(merged)}")
+print(f"NA check:\n{merged.isna().sum()}")
+
+### Static 1: Geographic Overlap
+
+# Step1: Independent Geographic spread for violation, economic pressure, and structural vulnerability
+
+# Merge with shapefile into gpd
+tracts = gpd.read_file(raw_dir/"tl_2024_17_tract.shp")
+
+tracts["GEOID"] = tracts["GEOID"].astype(str).str.zfill(11)
+merged["GEOID"] = merged["GEOID"].astype(str).str.zfill(11)
+
+gdf = tracts.merge(merged, on="GEOID", how="inner")
+
+gdf = gdf.to_crs(epsg=3857)
+
+print(gdf.shape)
+gdf.head()
+
+# Conduct log for violation because it is is too far to the right tail
+gdf["log_violation"] = np.log1p(gdf["avg_monthly_total_violation_rate"])
+
+vmin_index = -3
+vmax_index = 3
+
+fig, axes = plt.subplots(1, 3, figsize=(20, 7))
+
+# Econ
+gdf.plot(
+    column="economic_pressure_index",
+    cmap="OrRd",
+    linewidth=0.1,
+    edgecolor="white",
+    legend=True,
+    ax=axes[0]
+)
+axes[0].set_title("Economic Pressure Index")
+axes[0].axis("off")
+
+# Structural
+gdf.plot(
+    column="housing_structural_index",
+    cmap="OrRd",
+    linewidth=0.1,
+    edgecolor="white",
+    legend=True,
+    ax=axes[1]
+)
+axes[1].set_title("Structural Feature Index")
+axes[1].axis("off")
+
+# Violation (log)
+gdf.plot(
+    column="log_violation",
+    cmap="Reds",
+    linewidth=0.1,
+    edgecolor="white",
+    legend=True,
+    ax=axes[2]
+)
+axes[2].set_title("Log Violation Rate")
+axes[2].axis("off")
+
+chart_path = out_dir / "part1_distribution.png"
+fig.savefig(chart_path, dpi=300, bbox_inches="tight")
+
+plt.tight_layout()
+
+plt.show()
+```
+
 ![](../data/derived-data/part1_distribution.png)
 Violation rates are clearly spatially clustered, with higher values concentrated in the southern part of the city. Structural vulnerability exhibits a similar pattern of concentration, while economic pressure appears more spatially diffuse. 
 
 ### Correlation Analysis
-![](../data/derived-data/scatter_plot.png)  
+```{python}
+import pandas as pd
+import altair as alt
+from pathlib import Path
+import vl_convert as vlc
+import scipy.stats as stats
+import numpy as np
+
+# Path
+script_dir = Path(".").parent
+
+out_dir = script_dir / "../data/derived-data"
+out_dir.mkdir(parents=True, exist_ok=True)
+
+# Load data
+violation_path = out_dir / "building_violation_by_code_rate.csv"
+economic_path = out_dir / "economic_pressure.csv"
+housing_path = out_dir / "housing_structural_features.csv"
+
+violation = pd.read_csv(violation_path)
+economic = pd.read_csv(economic_path)
+housing = pd.read_csv(housing_path)
+
+# Sum up by GEOID+YEAR_MONTH (the total violation rate for the same area and the same month)
+violation_month_sum = violation.groupby(["GEOID", "YEAR_MONTH"])["VIOL_PER_1000_BUILDINGS"].sum().reset_index()
+violation_month_sum.rename(columns={"VIOL_PER_1000_BUILDINGS": "monthly_total_violation_rate"}, inplace=True)
+violation_month_sum.head()
+
+# Calculate the average by GEOID (the average monthly total violation rate for all months in the same area)
+violation_agg = violation_month_sum.groupby("GEOID")["monthly_total_violation_rate"].mean().reset_index()
+violation_agg.rename(columns={"monthly_total_violation_rate": "avg_monthly_total_violation_rate"}, inplace=True)
+violation_agg.head()
+
+# Merge
+economic_needed = economic[["GEOID", "economic_pressure_index"]]
+housing_needed = housing[["GEOID", "housing_structural_index"]]
+
+merged = violation_agg.merge(economic_needed, on="GEOID", how="inner")
+merged = merged.merge(housing_needed, on="GEOID", how="inner")
+
+print(f"Number of valid data rows after merging: {len(merged)}")
+print(f"NA check:\n{merged.isna().sum()}")
+
+# Plot
+alt.data_transformers.disable_max_rows()
+
+# Plot A: economic_pressure_index vs. avg_monthly_total_violation_rate
+econ_points = alt.Chart(merged).mark_circle(size=25, opacity=0.6, color="#4F8CC2").encode(
+    alt.X("economic_pressure_index:Q", title="Economic Pressure Index"),
+    alt.Y("avg_monthly_total_violation_rate:Q", title="Average Monthly Total Violation Rate")
+).properties(width=400, height=400)
+
+econ_reg = alt.Chart(merged).transform_regression(
+    "economic_pressure_index", "avg_monthly_total_violation_rate"
+).mark_line(color="#9B2F2F", strokeWidth=2).encode(
+    alt.X("economic_pressure_index:Q"),
+    alt.Y("avg_monthly_total_violation_rate:Q")
+)
+
+chart_econ = alt.layer(econ_points, econ_reg).properties(
+    title={"text": "Economic Pressure vs Building Violation Rate", "fontSize":14, "fontWeight":"bold"}
+)
+
+# Plot B: housing_structural_index vs. avg_monthly_total_violation_rate
+housing_points = alt.Chart(merged).mark_circle(size=25, opacity=0.6, color="#E39920").encode(
+    alt.X("housing_structural_index:Q", title="Housing Structural Index"),
+    alt.Y("avg_monthly_total_violation_rate:Q", title="Average Monthly Total Violation Rate")
+).properties(width=400, height=400)
+
+housing_reg = alt.Chart(merged).transform_regression(
+    "housing_structural_index", "avg_monthly_total_violation_rate"
+).mark_line(color="#BE2121", strokeWidth=2).encode(
+    alt.X("housing_structural_index:Q"),
+    alt.Y("avg_monthly_total_violation_rate:Q")
+)
+
+chart_housing = alt.layer(housing_points, housing_reg).properties(
+    title={"text": "Housing Structural Features vs Building Violation Rate", "fontSize":14, "fontWeight":"bold"}
+)
+
+# Integration
+final_chart = (chart_econ | chart_housing).configure_axis(
+    labelFontSize=12, titleFontSize=12, gridOpacity=0.3
+)
+final_chart.show()
+```
+
 The plot indicates that housing structural vulnerability is a more consistent predictor of building violation rates than neighborhood economic pressure: right plot shows a moderately stronger positive linear trend between the Housing Structural Feature and average monthly building violation rate.
+
+```{python}
+# Correlation coefficient and p-value
+econ_corr, econ_p = stats.pearsonr(
+    merged["economic_pressure_index"], 
+    merged["avg_monthly_total_violation_rate"]
+)
+
+housing_corr, housing_p = stats.pearsonr(
+    merged["housing_structural_index"], 
+    merged["avg_monthly_total_violation_rate"]
+)
+
+print("Pearson Correlation:")
+print(f"1. Economic Pressure Index vs Average Monthly Total Violation Rate:")
+print(f"   Correlation coefficient = {econ_corr:.4f}")
+print(f"   p-value = {econ_p:.6f}")
+
+print(f"\n2. Housing Structural Index vs Average Monthly Total Violation Rate:")
+print(f"   Correlation coefficient = {housing_corr:.4f}")
+print(f"   p-value = {housing_p:.6f}")
+
+corr_matrix = merged[["economic_pressure_index", "housing_structural_index", "avg_monthly_total_violation_rate"]].corr()
+corr_matrix.round(4)
+```
+
+Results of correlation coefficients in the regression matrix indicates that: The weak influence of economic pressure on the rate is likely to be indirectly generated through the mediating variable of housing structural features.
 
 
 ## Streamlit
 ##### Distribution
-We developed an interactive Streamlit dashboard to explore the distribution of housing violations across Chicago census tracts. The dashboard allows users to visualize violation rates, inspect tract-level information, and filter violations by category and time. It also includes a hotspot overlap tool that identifies tracts in the top percentile of economic pressure, structural vulnerability, and violation rates. These exploratory visualizations help identify spatial concentrations of risk and motivate the subsequent analysis of spatial patterns and overlapping housing risks.
-\
+We developed an interactive Streamlit dashboard to explore the distribution of housing violations across Chicago census tracts. The dashboard allows users to visualize violation rates, inspect tract-level information, and filter violations by category and time. It also includes a hotspot overlap tool that identifies tracts in the top percentile of economic pressure, structural vulnerability, and violation rates. These exploratory visualizations help identify spatial concentrations of risk and motivate the subsequent analysis of spatial patterns and overlapping housing risks.  
 Spatially, violation rates show persistent within-city imbalance: hotspots repeatedly cluster in Chicago’s southwest corridor, while north-side and lakefront areas remain relatively low.
+```{python}
+import pandas as pd
+import geopandas as gpd
+import streamlit as st
+import pydeck as pdk
+import numpy as np
+from pathlib import Path
+import re
+import matplotlib.cm as cm
+
+st.set_page_config(page_title="Chicago Building Violations Dashboard",layout="wide")
+
+
+# helpers: shorten labels / map intensity / match Reds palette
+def simplify_desc(s,max_len=26):
+    if pd.isna(s):
+        return ""
+    s=str(s).strip().lower()
+
+    s=re.sub(r"[^a-z0-9 ]"," ",s)
+    s=re.sub(r"\s+"," ",s).strip()
+
+    # normalize common variants
+    s=s.replace("comercial","commercial")
+    s=s.replace("residtl","residential")
+    s=s.replace("bldg","building")
+    s=s.replace("bldgs","building")
+    s=s.replace("sec","secure")
+    s=s.replace("secur","secure")
+    s=s.replace("encl","enclosure")
+    s=s.replace("flr","floor")
+    s=s.replace("bsmt","basement")
+    s=s.replace("bx","box")
+    s=s.replace("eleva","elevator")
+    s=s.replace("elect","electric")
+    s=s.replace("hydro","hydraulic")
+
+    # drop specs/noise
+    drop=set([
+        "hour","hours","hr","pre57","story","stories","gauge","above","over","under",
+        "ft","feet","in","inch","inches","du","lot","req","required","the","and","or","to","of","for","with","on","at","by","from"
+    ])
+    toks=[]
+    for t in s.split():
+        if t in drop:
+            continue
+        if re.fullmatch(r"\d+(\.\d+)?",t):
+            continue
+        if re.fullmatch(r"\d+\+?",t):
+            continue
+        if re.fullmatch(r"<\d+|\d+>",t):
+            continue
+        toks.append(t)
+
+    text=" ".join(toks)
+
+    # collapse to readable categories
+    patterns=[
+        (r".*\bboard\b.*\bsecure\b.*\bbuilding\b.*","board/secure building"),
+        (r".*\bboard\b.*\bbuilding\b.*","board building"),
+        (r".*\bsecure\b.*\bbuilding\b.*","secure building"),
+        (r".*\bheating\b.*\bplant\b.*\benclosure\b.*","heating plant enclosure"),
+        (r".*\bstair\b.*\benclosure\b.*\bhotel\b.*","stair enclosure (hotel)"),
+        (r".*\bstair\b.*\benclosure\b.*","stair enclosure"),
+        (r".*\bporch\b.*","porch"),
+        (r".*\bhood\b.*\bstack\b.*\broof\b.*","hood stack (roof)"),
+        (r".*\bbond\b.*\bfitting\b.*","electrical bonding"),
+        (r".*\bbond\b.*","electrical bonding"),
+        (r".*\brung\b.*|.*\bladder\b.*","ladder safety"),
+        (r".*\bshaft\b.*\bduct\b.*","shaft duct"),
+        (r".*\belevator\b.*","elevator"),
+        (r".*\belectric\b.*","electric"),
+        (r".*\bpermit\b.*|.*\bpermits\b.*","permit issue"),
+        (r".*\binspection\b.*","inspection"),
+        (r".*\brepair\b.*\bwall\b.*","wall repair"),
+        (r".*\brepair\b.*\bporch\b.*","porch repair"),
+        (r".*\brepair\b.*","repair"),
+        (r".*\bbox\b.*","box"),
+    ]
+    for pat,label in patterns:
+        if re.match(pat,text):
+            return label if len(label)<=max_len else label[:max_len-1]+"…"
+
+    # fallback: keep first few words
+    toks=toks[:4]
+    out=" ".join(toks).strip()
+    if out=="":
+        out="other"
+    if len(out)>max_len:
+        out=out[:max_len-1]+"…"
+    return out
+
+
+def make_alpha(series,relative_mode):
+    series=pd.to_numeric(series,errors="coerce").fillna(0.0)
+
+    if relative_mode:
+        vmax=float(series.quantile(0.95))
+        if vmax<=1:
+            vmax=1.5
+        fill_alpha=(
+            (series-1)
+            .clip(lower=0,upper=vmax-1)
+            .div(vmax-1)
+            .mul(235)
+            .add(20)
+            .clip(20,255)
+            .astype(int)
+        )
+        return fill_alpha
+    else:
+        vmax=float(series.quantile(0.95))
+        if vmax<=0:
+            vmax=1.0
+        fill_alpha=(
+            series
+            .clip(upper=vmax)
+            .div(vmax)
+            .mul(235)
+            .add(20)
+            .clip(20,255)
+            .astype(int)
+        )
+        return fill_alpha
+
+
+def reds_rgba(n):
+    n=int(n)
+    n=max(0,min(3,n))
+    r,g,b,a=cm.get_cmap("Reds")(n/3)
+    return [int(r*255),int(g*255),int(b*255),int(a*255)]
+
+
+# set paths & load data
+script_dir=Path(".").parent
+raw_dir=script_dir/"../data/raw-data"
+out_dir=script_dir/"../data/derived-data"
+
+TRACT_SHP=raw_dir/"tl_2024_17_tract.shp"
+RATE_PATH=out_dir/"building_violation_by_code_rate.csv"
+ECON_PATH=out_dir/"economic_pressure.csv"
+STRUCT_PATH=out_dir/"housing_structural_features.csv"
+
+econ=pd.read_csv(ECON_PATH)
+econ["GEOID"]=econ["GEOID"].astype(str).str.zfill(11)
+econ=econ[["GEOID","economic_pressure_index"]].copy()
+
+struct=pd.read_csv(STRUCT_PATH)
+struct["GEOID"]=struct["GEOID"].astype(str).str.zfill(11)
+struct=struct[["GEOID","housing_structural_index"]].copy()
+
+tracts=gpd.read_file(TRACT_SHP)[["GEOID","geometry"]].copy()
+tracts["GEOID"]=tracts["GEOID"].astype(str).str.zfill(11)
+tracts=tracts.to_crs("EPSG:4326")
+
+df=pd.read_csv(RATE_PATH)
+df["GEOID"]=df["GEOID"].astype(str).str.zfill(11)
+df["YEAR_MONTH_DT"]=pd.to_datetime(df["YEAR_MONTH_DT"],errors="coerce")
+
+need_cols=[
+    "GEOID","YEAR_MONTH_DT","YEAR_MONTH_STR",
+    "VIOLATION CODE","VIOLATION_DESCRIPTION",
+    "VIOLATION_COUNT","total_buildings","VIOL_PER_1000_BUILDINGS"
+]
+df=df[[c for c in need_cols if c in df.columns]].copy()
+
+# precompute readable categories + frequency
+code_desc=(df[["VIOLATION CODE","VIOLATION_DESCRIPTION","VIOLATION_COUNT"]]
+            .dropna(subset=["VIOLATION CODE"])
+            .copy())
+code_desc["DESC_READABLE"]=code_desc["VIOLATION_DESCRIPTION"].apply(simplify_desc)
+
+desc_freq=(code_desc.groupby("DESC_READABLE",as_index=False)["VIOLATION_COUNT"]
+            .sum()
+            .rename(columns={"VIOLATION_COUNT":"FREQ"}))
+desc_options=(desc_freq.sort_values(["FREQ","DESC_READABLE"],ascending=[False,True])["DESC_READABLE"].tolist())
+
+# align geoids across sources
+keep_geoids=set(df["GEOID"].dropna())&set(econ["GEOID"].dropna())&set(struct["GEOID"].dropna())
+tracts=tracts[tracts["GEOID"].isin(keep_geoids)].copy()
+
+
+# sidebar
+st.sidebar.header("Filters")
+page=st.sidebar.radio("View",["Monthly explorer","Hotspot overlap"],index=0)
+
+
+# view 1: Monthly explorer
+if page=="Monthly explorer":
+    valid_months=(df["YEAR_MONTH_DT"].dropna().drop_duplicates().sort_values().to_list())
+    if len(valid_months)==0:
+        st.error("No valid YEAR_MONTH_DT found.")
+        st.stop()
+
+    month_dt=st.sidebar.select_slider(
+        "Select month",
+        options=valid_months,
+        value=valid_months[0],
+        format_func=lambda x: pd.Timestamp(x).strftime("%Y-%m")
+    )
+
+    desc_choice=st.sidebar.selectbox(
+        "Select category (description)",
+        ["(All categories)"]+desc_options
+    )
+    st.sidebar.caption("Type to search. Options sorted by frequency.")
+
+    relative_mode=st.sidebar.toggle(
+        "Relative to city average",
+        value=False,
+        help="ON → rate / city_mean_rate  |  OFF → raw rate per 1,000 units"
+    )
+
+    show_top_codes=st.sidebar.checkbox("Show top codes table",value=True)
+
+    month_df=df[df["YEAR_MONTH_DT"]==pd.Timestamp(month_dt)].copy()
+
+    if desc_choice!="(All categories)":
+        sel_codes=(code_desc.loc[code_desc["DESC_READABLE"]==desc_choice,"VIOLATION CODE"]
+                   .dropna().unique().tolist())
+        month_df=month_df[month_df["VIOLATION CODE"].isin(sel_codes)].copy()
+
+    # aggregate by tract
+    tract_agg=(month_df.groupby("GEOID",as_index=False)
+                 .agg(VIOLATION_COUNT=("VIOLATION_COUNT","sum"),
+                      RATE=("VIOL_PER_1000_BUILDINGS","sum")))
+
+    city_mean=tract_agg["RATE"].mean() if len(tract_agg)>0 else 1.0
+    if city_mean==0:
+        city_mean=1.0
+
+    if relative_mode:
+        tract_agg["DISPLAY_VAL"]=(tract_agg["RATE"]/city_mean).round(3)
+        map_label="Rate / City Mean"
+    else:
+        tract_agg["DISPLAY_VAL"]=tract_agg["RATE"].round(2)
+        map_label="Rate per 1,000 units"
+
+    map_gdf=tracts.merge(tract_agg,on="GEOID",how="left")
+    map_gdf["VIOLATION_COUNT"]=map_gdf["VIOLATION_COUNT"].fillna(0).astype(int)
+    map_gdf["RATE"]=map_gdf["RATE"].fillna(0.0)
+    map_gdf["DISPLAY_VAL"]=map_gdf["DISPLAY_VAL"].fillna(0.0)
+
+    map_gdf=map_gdf.merge(econ,on="GEOID",how="left")
+    map_gdf=map_gdf.merge(struct,on="GEOID",how="left")
+
+    col1,col2,col3=st.columns(3)
+    col1.metric("Month",pd.Timestamp(month_dt).strftime("%Y-%m"))
+    col2.metric("Selected category",desc_choice)
+    col3.metric("Total violations (count)",int(map_gdf["VIOLATION_COUNT"].sum()))
+
+    mode_txt="relative to city average (ratio)" if relative_mode else "raw rate per 1,000 housing units"
+    st.caption(f"Map shows **{mode_txt}** (darker=higher).")
+
+    # map layer
+    map_ll=map_gdf.to_crs("EPSG:4326").copy()
+    map_ll["DISPLAY_VAL"]=pd.to_numeric(map_ll["DISPLAY_VAL"],errors="coerce").fillna(0.0)
+    map_ll["fill_alpha"]=make_alpha(map_ll["DISPLAY_VAL"],relative_mode)
+
+    layer=pdk.Layer(
+        "GeoJsonLayer",
+        data=map_ll.__geo_interface__,
+        pickable=True,
+        stroked=True,
+        filled=True,
+        extruded=False,
+        get_line_color=[255,255,255,60],
+        line_width_min_pixels=0.5,
+        get_fill_color="[255, 80, 0, properties.fill_alpha]",
+    )
+
+    view_state=pdk.ViewState(latitude=41.88,longitude=-87.63,zoom=10,min_zoom=8,max_zoom=14)
+
+    tooltip={
+        "html":(
+            "<b>Tract GEOID:</b> {GEOID}<br/>"
+            f"<b>{map_label}:</b> {{DISPLAY_VAL}}<br/>"
+            "<b>Violation count:</b> {VIOLATION_COUNT}<br/>"
+            "<b>Econ pressure index:</b> {economic_pressure_index}<br/>"
+            "<b>Housing structural index:</b> {housing_structural_index}"
+        ),
+        "style":{"backgroundColor":"white","color":"black"}
+    }
+
+    st.subheader("Map")
+    st.pydeck_chart(
+        pdk.Deck(layers=[layer],initial_view_state=view_state,map_style="light",tooltip=tooltip),
+        use_container_width=True
+    )
+
+    st.subheader("Top Tracts")
+    top_tracts=(map_gdf[["GEOID","DISPLAY_VAL","VIOLATION_COUNT","economic_pressure_index","housing_structural_index"]]
+                  .sort_values("DISPLAY_VAL",ascending=False)
+                  .head(15))
+    st.dataframe(top_tracts,use_container_width=True)
+
+    if show_top_codes:
+        st.subheader("Most Categories This Month")
+        top_codes=(month_df.groupby(["VIOLATION CODE","VIOLATION_DESCRIPTION"],as_index=False)["VIOLATION_COUNT"]
+                     .sum()
+                     .sort_values("VIOLATION_COUNT",ascending=False)
+                     .head(15))
+        top_codes["VIOLATION_DESCRIPTION"]=top_codes["VIOLATION_DESCRIPTION"].apply(simplify_desc)
+        st.dataframe(top_codes,use_container_width=True)
+
+
+# view 2: Hotspot overlap
+else:
+    st.sidebar.caption("Hotspot overlap is computed using tract-level averages across the selected time window.")
+
+    window_mode=st.sidebar.radio("Time window",["Overall (2020–2024)","Single year"],index=0)
+    if window_mode=="Single year":
+        years=sorted(df["YEAR_MONTH_DT"].dropna().dt.year.unique().tolist())
+        if len(years)==0:
+            st.error("No valid year found.")
+            st.stop()
+        year_choice=st.sidebar.selectbox("Select year",years,index=0)
+        df_win=df[df["YEAR_MONTH_DT"].dt.year==int(year_choice)].copy()
+    else:
+        df_win=df.copy()
+
+    layers=st.sidebar.multiselect(
+        "Overlap layers",
+        ["Economic Pressure Index","Structural Feature Index","Log Violation Rate"],
+        default=["Economic Pressure Index","Structural Feature Index","Log Violation Rate"]
+    )
+    st.sidebar.caption("Darker=more selected layers overlap (0–3).")
+
+    q=st.sidebar.slider("Hotspot threshold (top quantile)",min_value=0.5,max_value=0.95,value=0.75,step=0.05)
+    st.sidebar.caption(f"Hotspot=top {int(round((1-q)*100))}% tracts (cutoff at q={q:.2f}).")
+
+    if len(layers)<3:
+        show_only_triple=False
+        st.sidebar.caption("To filter triple-burden tracts, please select all 3 layers.")
+    else:
+        show_only_triple=st.sidebar.checkbox("Show only triple-burden tracts",value=False)
+
+    # tract-month sum → tract mean (violations)
+    vio_month=(df_win.groupby(["GEOID","YEAR_MONTH_DT"],as_index=False)
+                 .agg(monthly_total_violation_rate=("VIOL_PER_1000_BUILDINGS","sum")))
+    vio_agg=(vio_month.groupby("GEOID",as_index=False)
+              .agg(avg_monthly_total_violation_rate=("monthly_total_violation_rate","mean")))
+
+    overlap_df=(vio_agg.merge(econ,on="GEOID",how="inner")
+                    .merge(struct,on="GEOID",how="inner"))
+    map2_gdf=tracts.merge(overlap_df,on="GEOID",how="inner").copy()
+    if len(map2_gdf)==0:
+        st.error("No tracts available after merging for overlap analysis.")
+        st.stop()
+
+    q_econ=map2_gdf["economic_pressure_index"].quantile(q)
+    q_struct=map2_gdf["housing_structural_index"].quantile(q)
+    q_vio=map2_gdf["avg_monthly_total_violation_rate"].quantile(q)
+
+    map2_gdf["top_econ"]=map2_gdf["economic_pressure_index"]>=q_econ
+    map2_gdf["top_struct"]=map2_gdf["housing_structural_index"]>=q_struct
+    map2_gdf["top_vio"]=map2_gdf["avg_monthly_total_violation_rate"]>=q_vio
+
+    map2_gdf["overlap_count"]=0
+    if "Economic Pressure Index" in layers:
+        map2_gdf["overlap_count"]=map2_gdf["overlap_count"]+map2_gdf["top_econ"].astype(int)
+    if "Structural Feature Index" in layers:
+        map2_gdf["overlap_count"]=map2_gdf["overlap_count"]+map2_gdf["top_struct"].astype(int)
+    if "Log Violation Rate" in layers:
+        map2_gdf["overlap_count"]=map2_gdf["overlap_count"]+map2_gdf["top_vio"].astype(int)
+
+    map2_gdf["triple_hotspot"]=map2_gdf["overlap_count"]==3
+
+    if show_only_triple:
+        map2_gdf=map2_gdf[map2_gdf["triple_hotspot"]].copy()
+
+    col1,col2,col3,col4=st.columns(4)
+    col1.metric("Window",str(year_choice) if window_mode=="Single year" else "Overall")
+    col2.metric("Quantile cutoff",f"q={q:.2f} (top {int(round((1-q)*100))}%)")
+    col3.metric("Tracts shown",int(len(map2_gdf)))
+    col4.metric("Triple-burden tracts",int(map2_gdf["triple_hotspot"].sum()))
+
+    st.caption("This view highlights spatial overlap of selected risk layers (econ + structural + violations).")
+
+    map2_ll=map2_gdf.to_crs("EPSG:4326").copy()
+    map2_ll["fill_color"]=map2_ll["overlap_count"].apply(reds_rgba)
+
+    layer2=pdk.Layer(
+        "GeoJsonLayer",
+        data=map2_ll.__geo_interface__,
+        pickable=True,
+        stroked=True,
+        filled=True,
+        extruded=False,
+        get_line_color=[255,255,255,60],
+        line_width_min_pixels=0.5,
+        get_fill_color="properties.fill_color",
+    )
+
+    view_state2=pdk.ViewState(latitude=41.88,longitude=-87.63,zoom=10,min_zoom=8,max_zoom=14)
+
+    tooltip2={
+        "html":(
+            "<b>Tract GEOID:</b> {GEOID}<br/>"
+            "<b>Overlap count (0–3):</b> {overlap_count}<br/>"
+            "<b>Triple-burden:</b> {triple_hotspot}<br/>"
+            "<b>Economic Pressure Index:</b> {economic_pressure_index}<br/>"
+            "<b>Structural Feature Index:</b> {housing_structural_index}<br/>"
+            "<b>Avg monthly violation rate:</b> {avg_monthly_total_violation_rate}"
+        ),
+        "style":{"backgroundColor":"white","color":"black"}
+    }
+
+    st.subheader("Overlap Map (0–3)")
+    st.pydeck_chart(
+        pdk.Deck(layers=[layer2],initial_view_state=view_state2,map_style="light",tooltip=tooltip2),
+        use_container_width=True
+    )
+
+    st.subheader("Top Tracts by overlap")
+    out_cols=[
+        "GEOID","overlap_count","triple_hotspot",
+        "avg_monthly_total_violation_rate",
+        "economic_pressure_index","housing_structural_index"
+    ]
+    top_overlap=(map2_gdf[out_cols]
+                  .sort_values(["overlap_count","avg_monthly_total_violation_rate"],ascending=[False,False])
+                  .head(25))
+    st.dataframe(top_overlap,use_container_width=True)
+
+    st.download_button(
+        "Download overlap table (CSV)",
+        data=top_overlap.to_csv(index=False).encode("utf-8"),
+        file_name="hotspot_overlap_top_tracts.csv",
+        mime="text/csv"
+    )
+```
 
 
 ## Policy Extention
-```{=latex}
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.30\textwidth,keepaspectratio]{../data/derived-data/part2_overlap.png}
-\hspace{0.02\textwidth}
-\includegraphics[width=0.30\textwidth,keepaspectratio]{../data/derived-data/part2_highlight.png}
-\end{figure}
+```{python}
+## Step2: Top 25% Overlap
+
+# Calculate top 25% thresholds
+q_econ = gdf["economic_pressure_index"].quantile(0.75)
+q_struct = gdf["housing_structural_index"].quantile(0.75)
+q_vio = gdf["avg_monthly_total_violation_rate"].quantile(0.75)
+
+# Create indicator columns
+gdf["top_econ"] = gdf["economic_pressure_index"] >= q_econ
+gdf["top_struct"] = gdf["housing_structural_index"] >= q_struct
+gdf["top_vio"] = gdf["avg_monthly_total_violation_rate"] >= q_vio
+
+# Count overlap (0-3)
+gdf["overlap_count"] = (
+    gdf["top_econ"].astype(int) +
+    gdf["top_struct"].astype(int) +
+    gdf["top_vio"].astype(int)
+)
+
+# Identify triple burden tracts
+gdf["triple_hotspot"] = gdf["overlap_count"] == 3
+
+# Overlap Map
+fig, ax = plt.subplots(1, 1, figsize=(9, 9))
+
+gdf["overlap_score_cat"] = gdf["overlap_count"].astype("category")
+
+gdf.plot(
+    column="overlap_score_cat",
+    cmap="Reds",
+    linewidth=0.05,
+    edgecolor="white",
+    legend=True,
+    ax=ax
+)
+
+ax.set_title(
+    "Cumulative Overlap of Top 25% Risk Factors\n(Economic + Structural + Violations)"
+)
+ax.axis("off")
+overlap_path = out_dir / "part2_overlap.png"
+fig.savefig(overlap_path, dpi=300, bbox_inches="tight")
+plt.show()
+
+# Triple Hotspo Map
+fig, ax = plt.subplots(1, 1, figsize=(9, 9))
+
+gdf.plot(color="#eeeeee", linewidth=0.05, edgecolor="white", ax=ax)
+
+gdf[gdf["triple_hotspot"]].plot(color="red", linewidth=0.2, edgecolor="white", ax=ax)
+
+ax.set_title("Triple-Burden Hotspots")
+ax.axis("off")
+triple_path = out_dir / "part2_highlight.png"
+fig.savefig(triple_path, dpi=300, bbox_inches="tight")
+
+plt.show()
+plt.show()
+
+# Calculate Relative Risk
+group_means = gdf.groupby("overlap_count")["avg_monthly_total_violation_rate"].mean()
+
+print(group_means)
+
+mean_0 = group_means.loc[0]
+mean_3 = group_means.loc[3]
+
+risk_ratio = mean_3 / mean_0
+
+print("Relative Risk (Triple vs Low):", round(risk_ratio, 2))
 ```
+
 These overlapped maps illustrates the number of risk dimensions in which each tract falls within the top 25 percent. The triple-burden hotspots where the three pressure overlap are geographically concentrated in southern and southwestern Chicago.  
 The results suggest that housing policy should prioritize targeted inspections and maintenance programs in these high-risk neighborhoods. Because structural vulnerability shows a stronger association with violations than economic pressure, interventions focused on improving building conditions such as proactive inspections and rehabilitation support may be particularly effective. By using spatial risk mapping to identify and prioritize hotspots, housing agencies can allocate limited enforcement and maintenance resources more efficiently.
