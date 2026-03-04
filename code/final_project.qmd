@@ -20,6 +20,7 @@ execute:
   echo: false
   warning: false
   message: false
+  cache: false
 ---
 ## Group Information
 **Group Number:**
@@ -43,7 +44,7 @@ Census tract–level measures come from the Census Bureau ACS 5-year release (Co
 1. Clean Data: Time window filtering, GEOID standardization, quality checks, build tract-level structure.
 ```{python}
 #| output: false
-#| echo: true 
+#| echo: false 
 import geopandas as gpd
 import pandas as pd
 import numpy as np
@@ -100,7 +101,7 @@ def zscore(s: pd.Series) -> pd.Series:
 i. Created Violation Rate: converted raw violation counts into a rate per 1,000 units, equals to 1,000 × (count/total units), ensures that higher values indicate more violations relative to local building stock.
 ```{python}
 #| output: false
-#| echo: true 
+#| echo: false 
 ### Building violation
 # Read building_violations_raw
 violations_path=raw_dir/'building_violations_raw.csv'
@@ -217,7 +218,7 @@ ii. Standardization: Created z-scores Indexes.
 - Economic Pressure Index: rent_burden_z-index (share of households spending ≥30%) - income_z-index (direction reversa).  
 ```{python}
 #| output: false
-#| echo: true 
+#| echo: false 
 ### Economic Pressure 1: Rent Burden
 rent_burden = pd.read_csv(rent_burden_path)
 labels, rent_burden = split_label_and_data(rent_burden)
@@ -356,7 +357,7 @@ economic_df_final.to_csv(output_path, index=False)
 *(Here, tenure is measured as the percentage of renter-occupied units in each census tract, rather than tenancy term. Higher renter-occupied share is expected to correlate with higher building violation rates since: Landlords may have weaker incentives for regular maintenance of rental properties compared to owner-occupied homes; Short-term rental tenancy reduces tenants' motivation to report minor violations before they escalate, leading to accumulated housing code violations.)*
 ```{python}
 #| output: false
-#| echo: true 
+#| echo: false 
 ### Housing Structural Features 1: Poverty Rate
 poverty_status = pd.read_csv(poverty_status_path)
 labels, poverty_status = split_label_and_data(poverty_status)
@@ -588,6 +589,8 @@ housing_df_final.to_csv(output_path, index=False, encoding="utf-8")
 ## Static Visualization
 ### Spatial Distribution
 ```{python}
+#| output: false
+#| echo: false 
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -631,7 +634,8 @@ merged = merged.merge(housing_needed, on="GEOID", how="inner")
 
 print(f"Number of valid data rows after merging: {len(merged)}")
 print(f"NA check:\n{merged.isna().sum()}")
-
+```
+```{python}
 ### Static 1: Geographic Overlap
 
 # Step1: Independent Geographic spread for violation, economic pressure, and structural vulnerability
@@ -645,9 +649,6 @@ merged["GEOID"] = merged["GEOID"].astype(str).str.zfill(11)
 gdf = tracts.merge(merged, on="GEOID", how="inner")
 
 gdf = gdf.to_crs(epsg=3857)
-
-print(gdf.shape)
-gdf.head()
 
 # Conduct log for violation because it is is too far to the right tail
 gdf["log_violation"] = np.log1p(gdf["avg_monthly_total_violation_rate"])
@@ -700,12 +701,11 @@ plt.tight_layout()
 
 plt.show()
 ```
-
-![](../data/derived-data/part1_distribution.png)
 Violation rates are clearly spatially clustered, with higher values concentrated in the southern part of the city. Structural vulnerability exhibits a similar pattern of concentration, while economic pressure appears more spatially diffuse. 
 
 ### Correlation Analysis
 ```{python}
+#| echo: false 
 import pandas as pd
 import altair as alt
 from pathlib import Path
@@ -789,12 +789,12 @@ chart_housing = alt.layer(housing_points, housing_reg).properties(
 final_chart = (chart_econ | chart_housing).configure_axis(
     labelFontSize=12, titleFontSize=12, gridOpacity=0.3
 )
-final_chart.show()
+print(final_chart)
 ```
-
 The plot indicates that housing structural vulnerability is a more consistent predictor of building violation rates than neighborhood economic pressure: right plot shows a moderately stronger positive linear trend between the Housing Structural Feature and average monthly building violation rate.
 
 ```{python}
+#| echo: false 
 # Correlation coefficient and p-value
 econ_corr, econ_p = stats.pearsonr(
     merged["economic_pressure_index"], 
@@ -818,7 +818,6 @@ print(f"   p-value = {housing_p:.6f}")
 corr_matrix = merged[["economic_pressure_index", "housing_structural_index", "avg_monthly_total_violation_rate"]].corr()
 corr_matrix.round(4)
 ```
-
 Results of correlation coefficients in the regression matrix indicates that: The weak influence of economic pressure on the rate is likely to be indirectly generated through the mediating variable of housing structural features.
 
 
@@ -827,6 +826,7 @@ Results of correlation coefficients in the regression matrix indicates that: The
 We developed an interactive Streamlit dashboard to explore the distribution of housing violations across Chicago census tracts. The dashboard allows users to visualize violation rates, inspect tract-level information, and filter violations by category and time. It also includes a hotspot overlap tool that identifies tracts in the top percentile of economic pressure, structural vulnerability, and violation rates. These exploratory visualizations help identify spatial concentrations of risk and motivate the subsequent analysis of spatial patterns and overlapping housing risks.  
 Spatially, violation rates show persistent within-city imbalance: hotspots repeatedly cluster in Chicago’s southwest corridor, while north-side and lakefront areas remain relatively low.
 ```{python}
+#| echo: false 
 import pandas as pd
 import geopandas as gpd
 import streamlit as st
@@ -1262,7 +1262,8 @@ else:
 
 ## Policy Extention
 ```{python}
-## Step2: Top 25% Overlap
+#| echo: false 
+# Top 25% Overlap
 
 # Calculate top 25% thresholds
 q_econ = gdf["economic_pressure_index"].quantile(0.75)
@@ -1274,65 +1275,52 @@ gdf["top_econ"] = gdf["economic_pressure_index"] >= q_econ
 gdf["top_struct"] = gdf["housing_structural_index"] >= q_struct
 gdf["top_vio"] = gdf["avg_monthly_total_violation_rate"] >= q_vio
 
-# Count overlap (0-3)
 gdf["overlap_count"] = (
-    gdf["top_econ"].astype(int) +
-    gdf["top_struct"].astype(int) +
-    gdf["top_vio"].astype(int)
+    gdf["top_econ"].astype(int)
+    + gdf["top_struct"].astype(int)
+    + gdf["top_vio"].astype(int)
 )
 
-# Identify triple burden tracts
+# Count overlap (0-3)
 gdf["triple_hotspot"] = gdf["overlap_count"] == 3
-
-# Overlap Map
-fig, ax = plt.subplots(1, 1, figsize=(9, 9))
-
 gdf["overlap_score_cat"] = gdf["overlap_count"].astype("category")
 
+# Maps
+fig, (ax1, ax2) = plt.subplots(
+    1, 2,
+    figsize=(6, 3),
+    constrained_layout=True
+)
+
+# Left: overlap map (0-3)
 gdf.plot(
     column="overlap_score_cat",
     cmap="Reds",
     linewidth=0.05,
     edgecolor="white",
     legend=True,
-    ax=ax
+    ax=ax1
+)
+ax1.set_title("Overlap (Top 25%)", fontsize=9)
+ax1.axis("off")
+
+# Right: triple hotspots
+gdf.plot(color="#eeeeee", linewidth=0.05, edgecolor="white", ax=ax2)
+gdf[gdf["triple_hotspot"]].plot(color="red", linewidth=0.2, edgecolor="white", ax=ax2)
+ax2.set_title("Triple Hotspots", fontsize=9)
+ax2.axis("off")
+
+# Optional: one shared main title
+fig.suptitle(
+    "Cumulative Risk Overlap & Triple-Burden Hotspots",
+    fontsize=12,
+    y=1.05
 )
 
-ax.set_title(
-    "Cumulative Overlap of Top 25% Risk Factors\n(Economic + Structural + Violations)"
-)
-ax.axis("off")
-overlap_path = out_dir / "part2_overlap.png"
-fig.savefig(overlap_path, dpi=300, bbox_inches="tight")
+# Save as a single combined image
+combo_path = out_dir / "part2_overlap_triple.png"
+fig.savefig(combo_path, dpi=300, bbox_inches="tight")
 plt.show()
-
-# Triple Hotspo Map
-fig, ax = plt.subplots(1, 1, figsize=(9, 9))
-
-gdf.plot(color="#eeeeee", linewidth=0.05, edgecolor="white", ax=ax)
-
-gdf[gdf["triple_hotspot"]].plot(color="red", linewidth=0.2, edgecolor="white", ax=ax)
-
-ax.set_title("Triple-Burden Hotspots")
-ax.axis("off")
-triple_path = out_dir / "part2_highlight.png"
-fig.savefig(triple_path, dpi=300, bbox_inches="tight")
-
-plt.show()
-plt.show()
-
-# Calculate Relative Risk
-group_means = gdf.groupby("overlap_count")["avg_monthly_total_violation_rate"].mean()
-
-print(group_means)
-
-mean_0 = group_means.loc[0]
-mean_3 = group_means.loc[3]
-
-risk_ratio = mean_3 / mean_0
-
-print("Relative Risk (Triple vs Low):", round(risk_ratio, 2))
 ```
-
-These overlapped maps illustrates the number of risk dimensions in which each tract falls within the top 25 percent. The triple-burden hotspots where the three pressure overlap are geographically concentrated in southern and southwestern Chicago.  
-The results suggest that housing policy should prioritize targeted inspections and maintenance programs in these high-risk neighborhoods. Because structural vulnerability shows a stronger association with violations than economic pressure, interventions focused on improving building conditions such as proactive inspections and rehabilitation support may be particularly effective. By using spatial risk mapping to identify and prioritize hotspots, housing agencies can allocate limited enforcement and maintenance resources more efficiently.
+The maps show how many risk dimensions each tract falls into within the top 25%. The three pressures overlaps in southern and southwestern Chicago.  
+These patterns suggest that housing policy should prioritize targeted inspections and maintenance in these areas. Because structural vulnerability is more strongly associated with violations than economic pressure, interventions improving building conditions may be especially effective.
